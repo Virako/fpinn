@@ -105,13 +105,14 @@ config = ConfigConexion()
 # HACK: No reconoce el puerto en el URI y lo toma como parte del host. Lo añado detrás y colará en el dsn cuando lo parsee. 
 #conn = '%s://%s:%s@%s/%s port=%s' % (config.get_tipobd(), 
 #conn = '%s://%s:%s@%s/%s' % (config.get_tipobd(), 
-conn = '%s://%s:%s@%s/%s?autoCommit=False' % (config.get_tipobd(), 
+conn = '%s://%s:%s@%s/%s?autoCommit=True' % (config.get_tipobd(), 
                                      config.get_user(), 
                                      config.get_pass(), 
                                      config.get_host(), 
                                      config.get_dbname(), 
                                      #config.get_puerto()) 
                             )
+print "CONN", conn
 
 # HACK:
 # Hago todas las consultas case-insensitive machacando la función de 
