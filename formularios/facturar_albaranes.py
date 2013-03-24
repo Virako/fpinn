@@ -110,7 +110,7 @@ class FacturarAlbaranes(Ventana):
         albaranes = []
         model = self.wids['tv_datos'].get_model()
         for fila in range(len(model)):
-            if model[fila][5]:
+            if model[fila][5] and model[fila][4] != "Incompleto":
                 albaran = pclases.AlbaranSalida.get(model[fila][-1])
                 albaranes.append(albaran)
         facturas_creadas = []
