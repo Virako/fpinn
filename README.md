@@ -13,13 +13,21 @@ For install fpinn, you need install python-glade2 python-sqlobject python-psycop
 ### Create user and database
 
 Create a user that manage database:
+
     $ sudo adduser ufpinn
+
 Enter with the postgres user:
+
     $ sudo su postgres
+
 Create ROLE and database:
+
     $ psql
+
     =# CREATE USER ufpinn with password 'ufpinn';
+
     $ createdb fpinn -O ufpinn
+
 
 ### Insert tables to the database
 
@@ -28,7 +36,18 @@ Create ROLE and database:
 ### Add config to the file ginn.conf
 
 Configuring our server:
+
     You need change the file framework/ginn.conf
+
+### Create a user in the databade
+
+I recomended install pgadmin3and add user:
+
+    $ sudo aptget install pgadmin3
+
+User example:
+
+    $ test  098f6bcd4621d373cade4e832627b4f6    Test user   test@gmail.com  test    0       smpt.gmail.com  test@gmail.com  test    t   t   t   t   t   Test user. Not use in production.
 
 ### Execute
 
@@ -37,6 +56,7 @@ Configuring our server:
 ## Some errors
 
 Problem: psql: FATAL:  la autentificaci?n Peer fall? para el usuario <<ufpinn>>
+
 SOL: modificate the /etc/postgresql/9.1/main/pg\_hba.conf Change peer by md5.
 
 # license
