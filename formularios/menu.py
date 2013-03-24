@@ -252,8 +252,8 @@ class Menu:
         #                event_box.get_colormap().alloc_color("#ffffff"))
         self.cabecera.pack_start(event_box)
         b_salir = gtk.Button(stock = gtk.STOCK_QUIT)
-        b_salir.connect("clicked", 
-                        lambda boton: self.salir(boton, ventana = self.ventana))
+        b_salir.connect("clicked", lambda boton: self.salir(boton,\
+                ventana=self.ventana, mostrar_ventana=True))
         boxsalir = gtk.VBox()
         boxsalir.pack_end(gtk.VBox(), expand = True)
         boxsalir.pack_end(b_salir, expand = False, fill = True)

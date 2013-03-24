@@ -680,7 +680,7 @@ class Ventana:
             pass
             # DEBUG: print """WARNING: Botón «Actualizar» o "self.wids['ventana'] no encontrado. Excepción: %s""" % (msg)
         
-    def salir(self, boton, event = None, mostrar_ventana = True):
+    def salir(self, boton, event=None, mostrar_ventana=False):
         """
         Muestra una ventana de confirmación y 
         sale de la ventana cerrando el bucle
