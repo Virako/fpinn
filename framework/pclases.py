@@ -112,7 +112,6 @@ conn = '%s://%s:%s@%s/%s?autoCommit=True' % (config.get_tipobd(),
                                      config.get_dbname(), 
                                      #config.get_puerto()) 
                             )
-print "CONN", conn
 
 # HACK:
 # Hago todas las consultas case-insensitive machacando la función de 

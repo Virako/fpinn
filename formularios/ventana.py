@@ -737,10 +737,8 @@ class Ventana:
             if not mostrar_ventana or not \
                     utils.dialogo('¿Desea salir de la ventana actual?',
                     'SALIR', padre=self.wids['ventana'], icono=gtk.STOCK_QUIT):
-                print "ALGO"
                 return False
             else:
-                print "NADA"
                 return True
 
     def make_connections(self):
