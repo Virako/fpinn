@@ -725,7 +725,7 @@ class Ventana:
         if event == None:
             # Me ha invocado el botón
             if not mostrar_ventana or \
-               utils.dialogo('¿Desea salir de la ventana actual?', 
+                utils.dialogo('¿Desea salir de la ventana actual?', 
                              'SALIR', 
                              padre = self.wids['ventana'], 
                              icono = gtk.STOCK_QUIT):
@@ -734,11 +734,14 @@ class Ventana:
             else:
                 return True
         else:
-            return not mostrar_ventana or \
-                   not utils.dialogo('¿Desea salir de la ventana actual?', 
-                                     'SALIR', 
-                                     padre = self.wids['ventana'],
-                                     icono = gtk.STOCK_QUIT)
+            if not mostrar_ventana or not \
+                    utils.dialogo('¿Desea salir de la ventana actual?',
+                    'SALIR', padre=self.wids['ventana'], icono=gtk.STOCK_QUIT):
+                print "ALGO"
+                return False
+            else:
+                print "NADA"
+                return True
 
     def make_connections(self):
         """
