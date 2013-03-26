@@ -875,21 +875,11 @@ Déjelo en blanco si el cliente no tiene un día fijo en el que realice los pago
                 <child>
                   <widget class="GtkComboBoxEntry" id="vencimientos">
                     <property name="visible">True</property>
-                    <property name="items">30 D.F.F.
-60 D.F.F.
-90 D.F.F.
-120 D.F.F.
-30-60 D.F.F.
-30-60-90 D.F.F.
-30-60-90-120 D.F.F.
-30 D.F.R.
-60 D.F.R.
-90 D.F.R.
-120 D.F.R.
-30-60 D.F.R.
-30-60-90 D.F.R.
-30-60-90-120 D.F.R.
-120 D.U.D.M.F.F.</property>
+                    <property name="items">contado
+15 F.F.
+30 F.F.
+60 F.F.
+</property>
                     <child internal-child="entry">
                       <widget class="GtkEntry" id="comboboxentry-entry2">
                       </widget>
