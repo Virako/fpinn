@@ -170,7 +170,8 @@ class FacturasVenta(Ventana, VentanaGenerica):
                 ('ID', 'gobject.TYPE_INT64', False, False, False, None))
                 # La última columna (oculta en la Vista) siempre es el id.
         utils.preparar_listview(self.wids['tv_srcs'], cols, multi = True)
-        cols = (('Producto', 'gobject.TYPE_STRING', False, True, False, None),
+        cols = (('Albarán', 'gobject.TYPE_STRING', False, True, False, None),
+                ('Producto', 'gobject.TYPE_STRING', False, True, False, None),
                 ('Cantidad', 'gobject.TYPE_STRING', True, True, False, 
                     self.editar_cantidad), 
                 ('Precio', 'gobject.TYPE_STRING', True, True, False, 
@@ -412,7 +413,8 @@ class FacturasVenta(Ventana, VentanaGenerica):
         for ldv in self.objeto.lineasDeVenta:
             importe = ldv.calcular_importe(iva = False)
             total += importe 
-            model.append((ldv.productoVenta.nombre, 
+            model.append((ldv.albaranSalida.numalbaran,
+                          ldv.productoVenta.nombre, 
                           utils.float2str(ldv.cantidad), 
                           utils.float2str(ldv.precio), 
                           utils.float2str(importe), 
