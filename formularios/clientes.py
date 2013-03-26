@@ -235,9 +235,11 @@ class Clientes(Ventana, VentanaGenerica):
         en la ventana a no ser que se pulse en Cancelar en
         la ventana de resultados.
         """
-        a_buscar = utils.dialogo_entrada(titulo = "BUSCAR CLIENTE", 
-                    texto = "Introduzca nombre o cif del cliente:", 
-                    padre = self.wids['ventana']) 
+        #a_buscar = utils.dialogo_entrada(titulo = "BUSCAR CLIENTE", 
+        #            texto = "Introduzca nombre o cif del cliente:", 
+        #            padre = self.wids['ventana']) 
+        # No mostrar la ventana de búsqueda
+        a_buscar = ""
         if a_buscar != None:
             try:
                 ida_buscar = int(a_buscar)
