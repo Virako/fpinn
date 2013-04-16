@@ -70,7 +70,6 @@ sqlobject_autoid = lambda: sqlobject_version > "SQLObject 0.10.4"
 import sys, os
 from sqlobject import *
 from math import ceil
-
 try:
     import notificacion
 except:
@@ -88,7 +87,7 @@ from configuracion import ConfigConexion
 
 import mx, mx.DateTime, datetime
 
-from utils import parse_fecha, str_fecha, str_fechahora, _float, float2str
+from utils import parse_fecha, str_fecha, str_fechahora, _float, float2str, comparar_fechas
 
 from math import ceil
 
@@ -2151,9 +2150,7 @@ class FacturaVenta(SQLObject, PRPCTOO):
     servicios = MultipleJoin("Servicio")
 
     def get_albaranes(self):
-        """
-        Devuelve los objetos albarán relacionados.
-        """
+        """ Devuelve los objetos albarán relacionados.  """
         albs = []
         for ldv in self.lineasDeVenta:
             if ldv.albaranSalida and ldv.albaranSalida not in albs:
@@ -2351,7 +2348,8 @@ class FacturaVenta(SQLObject, PRPCTOO):
                     fechaest = fechas_est[0]
                     vto.fecha = fechaest 
         else:
-            txt = "El cliente ID %d no tiene datos suficientes para crear vencimientos por defecto." % cliente.id
+            txt = "El cliente ID %d no tiene datos suficientes para crear vto.\
+                    por defecto." % cliente.id
             print txt
         return vtos_creados
 
@@ -2370,7 +2368,43 @@ class FacturaVenta(SQLObject, PRPCTOO):
         Devuelve la suma de las cantidades de todas las líneas de venta.
         """
         return sum([ldv.cantidad for ldv in self.lineasDeVenta])
- 
+
+    def fecha_vencimiento(self):
+        vto = self.crear_vencimientos_por_defecto(True)
+        if not vto:
+            return ""
+        elif len(vto) > 1: # Usar la fecha más antigua
+            print "Hay mas de un vencimiento, ponemos el primero por defecto. "
+            #for v in xrange(len(vto)):
+            #    print vto[v].fecha
+            return vto[0].fecha
+        else:
+            #print "NO: ", vto[0].fecha
+            return vto[0].fecha
+
+    def fecha_pago(self):
+        cob = self.cobros[:]
+        try:
+            return cob[0].fecha
+        except:
+            return "no existe cobro"
+
+    def estado(self):
+        if self.calcular_pendiente_cobro() > 0:
+            if comparar_fechas(str_fecha(),
+                    str_fecha(self.fecha_vencimiento())) >= 0:
+                # TODO "CREAR ALARMAS"
+                st =  "Vencido"
+            elif self.observaciones.count("Correo enviado"):
+                st =  "Enviado"
+            else:
+                st =  "No enviado"
+        elif self.calcular_pendiente_cobro() == 0:
+            st =  "Cobrado"
+        else:
+            st =  "ERROR"
+        return st
+
 class Pale(SQLObject, PRPCTOO):
     # XXX: Común a todas las clases que heredan de SQLObject.
     _connection = conn

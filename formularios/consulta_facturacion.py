@@ -139,11 +139,13 @@ class ConsultaFacturacion(Ventana):
     def set_inicio(self,boton):
         temp = utils.mostrar_calendario(padre = self.wids['ventana'])
         self.wids['e_fechainicio'].set_text(utils.str_fecha(temp))
+        print "INICIO", temp
         self.inicio = str(temp[2])+'/'+str(temp[1])+'/'+str(temp[0])
 
     def set_fin(self,boton):
         temp = utils.mostrar_calendario(padre = self.wids['ventana'])
         self.wids['e_fechafin'].set_text(utils.str_fecha(temp))
+        print "FIN", temp
         self.fin = str(temp[2])+'/'+str(temp[1])+'/'+str(temp[0])
 
     def buscar(self,boton):

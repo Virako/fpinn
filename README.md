@@ -49,6 +49,12 @@ User example:
 
     $ test  098f6bcd4621d373cade4e832627b4f6    Test user   test@gmail.com  test    0       smpt.gmail.com  test@gmail.com  test    t   t   t   t   t   Test user. Not use in production.
 
+### Send mail
+
+You need put your email and password in the file utilidades/enviar\_correo.py
+
+Line 34 and 35.
+
 ### Execute
 
     $ python formularios/menu.py

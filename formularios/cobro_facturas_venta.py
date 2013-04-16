@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ###############################################################################
-# Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
-#                          (pacoqueen@users.sourceforge.net                   #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -22,799 +21,184 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA  #
 ###############################################################################
 
+###################################################################
+## facturar_albaranes.py - Genera facturas "en batería".
+###################################################################
+##
+###################################################################
 
-###################################################################
-## cobro_facturas_venta.py - Gestión de cobro de facturas de venta.
-###################################################################
-##  
-###################################################################
-
-import sys, os
+import os
 from ventana import Ventana
 import utils
 import pygtk
 pygtk.require('2.0')
-import gtk, gtk.glade, time, mx, mx.DateTime
-try:
-    import pclases
-    from seeker import VentanaGenerica 
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-    from seeker import VentanaGenerica 
-from utils import _float as float
-import adapter
+import gtk
+import gtk.glade
+import mx
+import mx.DateTime
+import sys
+from os.path import join as pathjoin
+sys.path.append(pathjoin("..", "framework"))
+import pclases
+sys.path.append("../utilidades")
+from scan import scan
+from enviar_correo import enviar_correo
 
-DEBUG = False
 
-class CobroFacturasVenta(Ventana, VentanaGenerica):
-    CLASE = pclases.FacturaVenta
-    VENTANA = os.path.join("..", "ui", "cobro_facturas_venta.glade")
-    def __init__(self, objeto = None, usuario = None):
+class CobroFacturasVenta(Ventana):
+
+    def __init__(self, objeto=None, usuario=None):
         """
         Constructor. objeto puede ser un objeto de pclases con el que
         comenzar la ventana (en lugar del primero de la tabla, que es
         el que se muestra por defecto).
         """
         self.usuario = usuario
-        self.clase = self.CLASE
-        Ventana.__init__(self, self.VENTANA, objeto)
-        self.dic_campos = self.__build_dic_campos()
-        self.adaptador = adapter.adaptar_clase(self.clase, self.dic_campos)
+        Ventana.__init__(self, os.path.join("..", "ui",
+                'facturar_albaranes.glade'), objeto)
         connections = {'b_salir/clicked': self.salir,
-                       'b_nuevo/clicked': self.nuevo,
-                       'b_borrar/clicked': self.borrar,
-                       'b_actualizar/clicked': self.actualizar_ventana,
-                       'b_guardar/clicked': self.guardar,
-                       'b_buscar/clicked': self.buscar,
-                       'b_vtos_defecto/clicked': self.crear_vtos_defecto, 
-                       'b_add_vto/clicked': self.add_vto,
-                       'b_drop_vto/clicked': self.drop_vto,
-                       'b_add_cobro/clicked': self.add_cobro, 
-                       'b_drop_cobro/clicked': self.drop_cobro, 
-                       'b_imprimir/clicked': self.imprimir}
+                       'b_add_cobro/clicked': self.add_cobro,
+                       'b_remove_cobro/clicked': self.remove_cobro}
         self.add_connections(connections)
-        self.inicializar_ventana()
-        if self.objeto == None:
-            self.ir_a_primero()
-        else:
-            self.ir_a(objeto)
+        cols = (('ID', 'gobject.TYPE_INT', False, True, True, None),
+                ('Número', 'gobject.TYPE_STRING', False, True, True, None),
+                ('Cliente', 'gobject.TYPE_STRING', False, True, False, None),
+                ('Fecha', 'gobject.TYPE_STRING', False, True, False, None),
+                ('Importe', 'gobject.TYPE_STRING', False, True, False, None),
+                ('Estado', 'gobject.TYPE_STRING', False, True, False, None),
+                ('Fecha vto', 'gobject.TYPE_STRING', False, True, False, None),
+                ('Pagado en', 'gobject.TYPE_STRING', False, True, False, None),
+                ('Justificar pago', 'gobject.TYPE_BOOLEAN', True, True, False,
+                    self.cambiar_generar),
+                ('id', 'gobject.TYPE_STRING', False, False, False, None))
+        utils.preparar_listview(self.wids['tv_datos'], cols)
+        #self.wids['tv_datos'].connect("row-activated", self.abrir_factura,
+        #        self.usuario, self)
+        col = self.wids['tv_datos'].get_column(3)
+        for cell in col.get_cell_renderers():
+            cell.set_property("xalign", 1.0)
+        col = self.wids['tv_datos'].get_column(4)
+        for cell in col.get_cell_renderers():
+            cell.set_property("xalign", 0.5)
+        self.rellenar_widgets()
+        self.wids['ventana'].resize(800, 600)
         gtk.main()
 
-    def ir_a_primero(self):
-        try:
-            fra = pclases.FacturaVenta.select(
-                    orderBy = "-id")[0]
-            self.ir_a(fra)
-        except IndexError:
-            self.objeto = None
-            self.actualizar_ventana()
-
-    def __build_dic_campos(self):
-        """
-        Devuelve un diccionario de campos de la clase de pclases y 
-        su widget relacionado.
-        El widget y el atributo deben llamarse igual, o en todo caso
-        ser del tipo "e_nombre", "cb_nombre", etc.
-        Los atributos para los que no se encuentre widget en el glade
-        se ignorarán (cuando se adapten mediante el módulo adapter se
-        les creará un widget apropiado a estas columnas ignoradas aquí).
-        """
-        res = {}
-        for colname in self.clase.sqlmeta.columns:
-            col = self.clase.sqlmeta.columns[colname]
-            for widname_glade in self.wids.keys():
-                if "_" in widname_glade:
-                    widname = "".join(widname_glade.split("_")[1:])
-                else:
-                    widname = widname_glade
-                if widname == colname:
-                    w = self.wids[widname_glade]
-                    res[col] = w
-        return res
-
-    def es_diferente(self):
-        """
-        Devuelve True si algún valor en ventana difiere de 
-        los del objeto.
-        """
-        if self.objeto == None:
-            igual = True
-        else:
-            adaptadores = self.adaptador.get_adaptadores()
-            igual = self.objeto != None
-            for col in adaptadores:
-                if col.name in ("comision", "transporte"):
-                    continue
-                fcomp = adaptadores[col]['comparar']
-                igual = igual and fcomp(self.objeto)
-                if not igual:
-                    if DEBUG:
-                        print col.name, 
-                        en_pantalla = adaptadores[col]['leer']()
-                        en_objeto = getattr(self.objeto, col.name)
-                        print "En pantalla:", en_pantalla, type(en_pantalla),
-                        print "En objeto:", en_objeto, type(en_objeto), 
-                        print fcomp(self.objeto)
-                    break
-        return not igual
-    
-    def inicializar_ventana(self):
-        """
-        Inicializa los controles de la ventana, estableciendo sus
-        valores por defecto, deshabilitando los innecesarios,
-        rellenando los combos, formateando el TreeView -si lo hay-...
-        """
-        # Inicialmente no se muestra NADA. Sólo se le deja al
-        # usuario la opción de buscar o crear nuevo.
-        self.activar_widgets(False)
-        self.wids['b_actualizar'].set_sensitive(False)
-        self.wids['b_guardar'].set_sensitive(False)
-        self.wids['b_nuevo'].set_sensitive(True)
-        self.wids['b_buscar'].set_sensitive(True)
-        self.wids['ventana'].set_title(self.clase.sqlmeta.table.upper())
-        # Inicialización del resto de widgets:
-        clientes = [(c.id, "%s (%s)" % (c.nombre, c.cif))
-                     for c in pclases.Cliente.select(orderBy = "nombre")]
-        utils.rellenar_lista(self.wids['cb_clienteID'], clientes)
-        cols = (("Fecha", "gobject.TYPE_STRING", True, True, True, 
-                    self.cambiar_fecha_vto), 
-                ("Cantidad", "gobject.TYPE_STRING", True, True, False, 
-                    self.cambiar_importe_vto), 
-                ("ID", "gobject.TYPE_INT64", False, False, False, None))
-        utils.preparar_listview(self.wids['tv_vencimientos'], cols)
-        cols = (("Fecha", "gobject.TYPE_STRING", True, True, True, 
-                    self.cambiar_fecha_cobro), 
-                ("Cantidad", "gobject.TYPE_STRING", True, True, False, 
-                    self.cambiar_importe_cobro), 
-                ("Observaciones", "gobject.TYPE_STRING", True, True, False, 
-                    self.cambiar_observaciones_cobro), 
-                ("ID", "gobject.TYPE_INT64", False, False, False, None))
-        utils.preparar_listview(self.wids['tv_cobros'], cols)
-
-    def activar_widgets(self, s, chequear_permisos = True):
-        """
-        Activa o desactiva (sensitive=True/False) todos 
-        los widgets de la ventana que dependan del 
-        objeto mostrado.
-        Entrada: s debe ser True o False. En todo caso
-        se evaluará como boolean.
-        """
-        if self.objeto == None:
-            s = False
-        #ws = tuple(["XXXWidgets_que_no_tengan_«adaptador»_en_el_diccionario_del_constructor", "XXXtv_treeview", "b_borrar"] + [self.dic_campos[k] for k in self.dic_campos.keys()])
-        ws = (["b_borrar", "vbox2"] + 
-              [self.adaptador.get_adaptadores()[col]['widget'].name 
-               for col in self.adaptador.get_adaptadores().keys()])
-            # b_nuevo y b_buscar no se activan/desactivan aquí, sino en el
-            # chequeo de permisos.
-        #ws.remove("proveedorID")
-        ws.remove("serieFacturasVentaID")
-        ws.remove("vbox2")
-        ws.remove("transporte")
-        ws.remove("comision")
-        for w in ws:
-            try:
-                self.wids[w].set_sensitive(s)
-            except Exception, msg:
-                print "Widget problemático:", w, "Excepción:", msg
-                #import traceback
-                #traceback.print_last()
-        if chequear_permisos:
-            self.check_permisos(nombre_fichero_ventana = "cobro_facturas_venta.py")
-
-    def refinar_resultados_busqueda(self, resultados):
-        """
-        Muestra en una ventana de resultados todos los
-        registros de "resultados".
-        Devuelve el id (primera columna de la ventana
-        de resultados) de la fila seleccionada o None
-        si se canceló.
-        """
-        filas_res = []
-        for r in resultados:
-            filas_res.append((r.id, r.numfactura, 
-                                    r.cliente and r.cliente.nombre or "", 
-                                    utils.str_fecha(r.fecha)))
-        id = utils.dialogo_resultado(filas_res,
-                                     titulo = 'SELECCIONE %s' % self.clase.sqlmeta.table.upper(),
-                                     cabeceras = ('ID', 
-                                                  'Número de factura', 
-                                                  'Cliente', 
-                                                  'Fecha'), 
-                                     padre = self.wids['ventana'])
-        if id < 0:
-            return None
-        else:
-            return id
+    def cambiar_generar(self, cell, path):
+        model = self.wids['tv_datos'].get_model()
+        model[path][5] = not cell.get_active()
 
     def rellenar_widgets(self):
-        """
-        Introduce la información de la cuenta actual
-        en los widgets.
-        No se chequea que sea != None, así que
-        hay que tener cuidado de no llamar a 
-        esta función en ese caso.
-        """
-        self.wids['l_proveedor'].set_property("visible", self.objeto.proveedor)
-        self.wids['cb_proveedorID'].set_property("visible", 
-                                                 self.objeto.proveedor)
-        adaptadores = self.adaptador.get_adaptadores()
-        for col in adaptadores.keys():
-            adaptadores[col]['mostrar'](self.objeto)
-        subtotal = self.rellenar_tabla_ldvs()
-        self.objeto.make_swap()
-        self.wids['ventana'].set_title(self.objeto.get_info())
-        numsalbs = utils.unificar([ldv.albaranSalida 
-                                        and ldv.albaranSalida.numalbaran 
-                                        or ""
-                                   for ldv in self.objeto.lineasDeVenta])
-        numsalbs = ", ".join(numsalbs)
-        self.wids['e_peds_albs'].set_text(numsalbs)
-        self.rellenar_totales(subtotal)
-        self.rellenar_vencimientos()
+        series = [(s.id, s.get_next_numfactura(commit=False))
+                  for s in pclases.SerieFacturasVenta.select()]
+        series.insert(0, (-1, "Usar el predefinido de cada cliente"))
+        self.rellenar_tabla()
 
-    def rellenar_totales(self, subtotal = None, servicios = None):
-        if subtotal != None:
-            b_imponible = subtotal 
-        else:
-            b_imponible = sum([ldv.calcular_importe(iva = False)
-                               for ldv in self.objeto.lineasDeVenta])
-        if servicios == None:
-            servicios = sum([srv.calcular_importe(iva = False)
-                             for srv in self.objeto.servicios])
-        # XXX: Transporte va fuera de IVA.
-        # servicios += self.objeto.transporte + self.objeto.comision
-        servicios += self.objeto.comision
-        # XXX
-        b_imponible += servicios
-        self.wids['e_subtotal'].set_text(utils.float2str(b_imponible))
-        descuento = b_imponible * self.objeto.descuento
-        self.wids['e_tot_dto'].set_text(utils.float2str(descuento))
-        tras_dto = b_imponible - descuento
-        totiva = tras_dto * self.objeto.iva
-        self.wids['e_total_iva'].set_text(utils.float2str(totiva))
-        total = tras_dto + totiva + self.objeto.descuentoNumerico
-        # XXX: Transporte va fuera de IVA
-        total += self.objeto.transporte 
-        # XXX
-        self.wids['e_total'].set_text(utils.float2str(total))
+    def rellenar_tabla(self, filtro=None):
+        " Rellena el model con los items de la consulta. """
+        facturas = pclases.FacturaVenta.select(orderBy='fecha')
 
-    def rellenar_tabla_ldvs(self):
-        total = 0.0
-        for ldv in self.objeto.lineasDeVenta:
-            importe = ldv.calcular_importe(iva = False)
-            total += importe 
-        return total
-            
-    def nuevo(self, widget):
-        """
-        Función callback del botón b_nuevo.
-        Pide los datos básicos para crear un nuevo objeto.
-        Una vez insertado en la BD hay que hacerlo activo
-        en la ventana para que puedan ser editados el resto
-        de campos que no se hayan pedido aquí.
-        """
-        clientes = [(c.id, "%s (%s)" % (c.nombre, c.cif)) 
-                    for c in pclases.Cliente.select(
-                        pclases.Cliente.q.inhabilitado == False, 
-                        orderBy = "nombre")]
-        idcliente = utils.dialogo_combo("CLIENTE NUEVA FACTURA", 
-                                        "Seleccione un cliente de la lista", 
-                                        clientes, 
-                                        padre = self.wids['ventana'])
-        if idcliente != None:
-            series = [(s.id, s.get_next_numfactura()) for s in 
-                        pclases.SerieFacturasVenta.select(orderBy = "prefijo")]
-            idserie = utils.dialogo_combo("SERIE DE FACTURAS", 
-                                          "Seleccione una serie:", 
-                                          series, 
-                                          self.wids['ventana'])
-            if idserie != None:
-                objeto_anterior = self.objeto
-                if objeto_anterior != None:
-                    objeto_anterior.notificador.desactivar()
-                serie = pclases.SerieFacturasVenta.get(idserie)
-                numfactura = serie.get_next_numfactura()
-                self.objeto = self.clase(bloqueada = False, 
-                                         clienteID = idcliente, 
-                                         serieFacturasVentaID = idserie, 
-                                         numfactura = numfactura)  
-                numfactura = serie.get_next_numfactura(commit = True)
-                assert numfactura == self.objeto.numfactura
-                self.objeto.notificador.activar(self.aviso_actualizacion)
-                self._objetoreciencreado = self.objeto
-                self.activar_widgets(True)
-                self.actualizar_ventana(objeto_anterior = objeto_anterior)
-                utils.dialogo_info('NUEVO %s CREADO' % self.clase.sqlmeta.table.upper(), 
-                                   'Se ha creado un nuevo %s.\nA continuación complete la información del misma y guarde los cambios.' % self.clase.sqlmeta.table.lower(), 
-                                   padre = self.wids['ventana'])
-
-    def buscar(self, widget):
-        """
-        Muestra una ventana de búsqueda y a continuación los
-        resultados. El objeto seleccionado se hará activo
-        en la ventana a no ser que se pulse en Cancelar en
-        la ventana de resultados.
-        """
-        a_buscar = utils.dialogo_entrada(titulo = "BUSCAR %s" % self.clase.sqlmeta.table.upper(), 
-                                         texto="Introduzca número de factura:", 
-                                         padre = self.wids['ventana']) 
-        if a_buscar != None:
-            try:
-                ida_buscar = int(a_buscar)
-            except ValueError:
-                ida_buscar = -1
-            campos_busqueda = (self.clase.q.numfactura, ) 
-            subsubcriterios = []
-            sqlower = pclases.sqlbuilder.func.lower
-            for cb in campos_busqueda:
-                ssc = [sqlower(cb).contains(t.lower()) 
-                        for t in a_buscar.split()]
-                if ssc:
-                    subsubcriterios.append(pclases.AND(*ssc))
-                else:
-                    subsubcriterios.append(
-                        sqlower(cb).contains(a_buscar.lower()))
-            if len(subsubcriterios) > 1:
-                subcriterios = pclases.OR(*subsubcriterios)
-            else:
-                subcriterios = subsubcriterios
-            criterio = pclases.OR(subcriterios, 
-                                  self.clase.q.id == ida_buscar)
-            # Al pasar la gestión de cobros a ventana aparte, aquí no se 
-            # filtran facturas de terceros.
-            #resultados = self.clase.select(pclases.AND(criterio, 
-            #                                self.clase.q.proveedorID == None))
-            resultados = self.clase.select(criterio)
-            if resultados.count() > 1:
-                ## Refinar los resultados
-                id = self.refinar_resultados_busqueda(resultados)
-                if id == None:
-                    return
-                resultados = [self.clase.get(id)]
-                # Me quedo con una lista de resultados de un único objeto 
-                # ocupando la primera posición.
-                # (Más abajo será cuando se cambie realmente el objeto actual 
-                # por este resultado.)
-            elif resultados.count() < 1:
-                ## Sin resultados de búsqueda
-                utils.dialogo_info(titulo = 'SIN RESULTADOS', 
-                                   texto = 'La búsqueda no produjo resultados.\nPruebe a cambiar el texto buscado o déjelo en blanco para ver una lista completa.\n(Atención: Ver la lista completa puede resultar lento si el número de elementos es muy alto)',
-                                   padre = self.wids['ventana'])
-                return
-            ## Un único resultado
-            # Primero anulo la función de actualización
-            if self.objeto != None:
-                self.objeto.notificador.desactivar()
-            # Pongo el objeto como actual
-            try:
-                self.objeto = resultados[0]
-            except IndexError:
-                utils.dialogo_info(titulo = "ERROR", 
-                                   texto = "Se produjo un error al recuperar la información.\nCierre y vuelva a abrir la ventana antes de volver a intentarlo.", 
-                                   padre = self.wids['texto'])
-                return
-            # Y activo la función de notificación:
-            self.objeto.notificador.activar(self.aviso_actualizacion)
-            self.activar_widgets(True)
-        self.actualizar_ventana()
-
-    def guardar(self, widget):
-        """
-        Guarda el contenido de los entry y demás widgets de entrada
-        de datos en el objeto y lo sincroniza con la BD.
-        """
-        # Desactivo el notificador momentáneamente
-        self.objeto.notificador.desactivar()
-        # Actualizo los datos del objeto
-        adaptadores = self.adaptador.get_adaptadores()
-        for col in adaptadores:
-            setattr(self.objeto, col.name, adaptadores[col]['leer']())
-        # Fuerzo la actualización de la BD y no espero a que SQLObject 
-        # lo haga por mí:
-        self.objeto.syncUpdate()
-        self.objeto.sync()
-        # Vuelvo a activar el notificador
-        self.objeto.notificador.activar(self.aviso_actualizacion)
-        self.actualizar_ventana()
-        self.wids['b_guardar'].set_sensitive(False)
-
-    def borrar(self, widget):
-        """
-        Elimina la cuenta de la tabla pero NO
-        intenta eliminar ninguna de sus relaciones,
-        de forma que si se incumple alguna 
-        restricción de la BD, cancelará la eliminación
-        y avisará al usuario.
-        """
-        if not utils.dialogo('¿Eliminar %s?'%self.clase.sqlmeta.table.lower(), 
-                             'BORRAR', 
-                             padre = self.wids['ventana']):
-            return
-		# TODO: Decrementar contador
-        # USABILIDAD: Si al intentar borrar, falla por tener cobros o algo, 
-        # podría preguntar al usuario si continuar (usando destroy_en_casdcada)
-        # o cancelar el resto del borrado (dejando la factura como está o 
-        # restaurando los valores anteriores). Seguramente el usuario está tan 
-        # acojonado por borrar algo, que si falla acabará respondiendo que 
-        # «No» en el segundo diálogo por miedo a empeorar las cosas, dejando 
-        # el sistema en la peor situación posible: ni está la factura como 
-        # al principio (cosa que desearía el usuario deseando que se lo 
-        # trague la tierra por intentar borrar nada) ni se ha eliminado com-
-        # pletamente, que era lo que quería al principio, y sin rastro de 
-        # cobros de facturas vacías ni datos parciales en registros 
-        # relacionados.
-        # ¿Qué hacer? Supongo que si quiere borrar será por algo, y ya hay 
-        # un diálogo bastante claro como para evitar borrados accidentales. 
-        # Así que destroy en cascada y a huir.
-        self.objeto.notificador.desactivar()
-        try:
-            #self.objeto.destroySelf()
-            self.objeto.destroy_en_cascada()
-        except Exception, e:
-            self.logger.error("cobro_facturas_venta.py::borrar -> %s ID "
-                              "%d no se pudo eliminar. Excepción: %s." % (
-                                self.objeto.sqlmeta.table, self.objeto.id, e))
-            utils.dialogo_info(titulo = "%s NO BORRADO" % (
-                                        self.clase.sqlmeta.table.upper()), 
-                               texto = "%s no se pudo eliminar.\n\nSe generó "
-                                        "un informe de error en el «log» de l"
-                                        "a aplicación." % (
-                                            self.clase.sqlmeta.table.title()),
-                               padre = self.wids['ventana'])
-            self.actualizar_ventana()
-            return
-        self.objeto = None
-        self.ir_a_primero()
-
-    def cambiar_cantidad(self, cell, path, texto):
-        model = self.wids['tv_ldvs'].get_model()
-        idldv = model[path][-1]
-        ldv = pclases.LineaDeVenta.get(idldv)
-        try:
-            ldv.cantidad = utils._float(texto)
-            ldv.syncUpdate()
-            # self.rellenar_servicios()
-            model[path][1] = ldv.cantidad
-            model[path][3] = ldv.calcular_importe(iva = False)
-            self.rellenar_totales()
-            self.rellenar_vencimientos()    
-                # Para que verifique si los totales coinciden
-        except:
-            utils.dialogo_info(titulo = "ERROR DE FORMATO", 
-                               texto = 'Formato numérico incorrecto', 
-                               padre = self.wids['ventana'])
-
-    def cambiar_precio(self, cell, path, texto):
-        model = self.wids['tv_ldvs'].get_model()
-        idldv = model[path][-1]
-        ldv = pclases.LineaDeVenta.get(idldv)
-        try:
-            ldv.precio = utils._float(texto)
-            ldv.syncUpdate()
-            model[path][2] = ldv.precio
-            model[path][3] = ldv.calcular_importe(iva = False)
-            self.rellenar_totales()
-            self.rellenar_vencimientos()
-                # Para que verifique si los totales coinciden
-        except:
-            utils.dialogo_info(titulo = "ERROR DE FORMATO", 
-                               texto = 'Formato numérico incorrecto', 
-                               padre = self.wids['ventana'])
-
-    def crear_servicio(self):
-        # Datos a pedir: Concepto, descuento y precio... Bah, el descuento 
-        # que lo cambie en el TreeView.
-        concepto = utils.dialogo_entrada(titulo = "CONCEPTO",
-                    texto = 'Introduzca el concepto del servicio facturable:', 
-                    padre = self.wids['ventana'])
-        if concepto != None:
-            precio = utils.dialogo_entrada(titulo = "PRECIO", 
-                    texto = 'Introduzca el precio unitario sin IVA:', 
-                    padre = self.wids['ventana'])
-            if precio != None:
-                try:
-                    precio = utils._float(precio)
-                    servicio = pclases.Servicio(facturaVenta = self.objeto,
-                                                concepto = concepto,
-                                                precio = precio,
-                                                descuento = 0)
-                    # Cantidad es 1 por defecto.
-                except Exception, e:
-                    utils.dialogo_info(texto = """
-                    Ocurrió un error al crear el servicio.                   
-                    Asegúrese de haber introducido correctamente los datos,  
-                    especialmente el precio (que no debe incluir símbolos    
-                    monetarios), y vuelva a intentarlo.
-
-                    DEBUG:
-                    %s
-                    """ %(e), 
-                                       titulo = "ERROR", 
-                                       padre = self.wids['ventana'])
-                    return
-                self.rellenar_servicios()
-                self.rellenar_vencimientos()    
-                    # Para que verifique si los totales coinciden
-
-    def cambiar_concepto_srv(self, cell, path, texto):
-        model = self.wids['tv_servicios'].get_model()
-        idsrv = model[path][-1]
-        srv = pclases.Servicio.get(idsrv)
-        srv.concepto = texto
-        self.rellenar_servicios()
-
-    def cambiar_cantidad_srv(self, cell, path, texto):
-        model = self.wids['tv_servicios'].get_model()
-        idsrv = model[path][-1]
-        srv = pclases.Servicio.get(idsrv)
-        try:
-            srv.cantidad = utils._float(texto)
-            srv.syncUpdate()
-            # self.rellenar_servicios()
-            model[path][0] = srv.cantidad
-            model[path][4] = srv.precio * (1.0 - srv.descuento) * srv.cantidad
-            self.rellenar_totales()
-            self.rellenar_vencimientos()    
-                # Para que verifique si los totales coinciden
-        except:
-            utils.dialogo_info(titulo = "ERROR DE FORMATO", 
-                               texto = 'Formato numérico incorrecto', 
-                               padre = self.wids['ventana'])
-
-    def cambiar_precio_srv(self, cell, path, texto):
-        model = self.wids['tv_servicios'].get_model()
-        idsrv = model[path][-1]
-        srv = pclases.Servicio.get(idsrv)
-        try:
-            srv.precio = utils._float(texto)
-            # print srv.precio, utils._float(texto), texto
-            self.rellenar_servicios()
-            self.rellenar_vencimientos()
-                # Para que verifique si los totales coinciden
-        except:
-            utils.dialogo_info(titulo = "ERROR DE FORMATO", 
-                               texto = 'Formato numérico incorrecto', 
-                               padre = self.wids['ventana'])
-
-    def cambiar_descuento_srv(self, cell, path, texto):
-        model = self.wids['tv_servicios'].get_model()
-        idsrv = model[path][-1]
-        srv = pclases.Servicio.get(idsrv)
-        try:
-            try:
-                srv.descuento = utils.parse_porcentaje(texto)
-            except ValueError:
-                srv.descuento = 0
-            if srv.descuento > 1.0:
-                srv.descuento /= 100.0
-            self.rellenar_servicios()
-            self.rellenar_vencimientos()
-                # Para que verifique si los totales coinciden
-        except:
-            utils.dialogo_info(titulo = "ERROR DE FORMATO", 
-                               texto = 'Formato numérico incorrecto', 
-                               padre = self.wids['ventana'])
-
-    def rellenar_servicios(self):
-        model = self.wids['tv_servicios'].get_model()
+        model = self.wids['tv_datos'].get_model()
         model.clear()
-        for servicio in self.objeto.servicios:
-            # print servicio.precio, utils._float(servicio.precio)
-            model.append((servicio.cantidad,
-                          servicio.concepto, 
-                          servicio.precio, 
-                          servicio.descuento, 
-                          servicio.calcular_importe(),
-                          servicio.id))
-        self.rellenar_totales()
+        for factura in facturas:
+            if filtro == factura.estado():
+                continue
+            if factura.estado() == "No enviado":
+                pdf = "factura_" + factura.numfactura.__str__()
+                pdf.replace("/", "_")
+                if (factura.cliente.email and enviar_correo("Factura",
+                        factura.cliente.email, "Texto de prueba", [pdf])):
+                    factura.observaciones = "Correo enviado"
+            importe = factura.calcular_importe_total(iva=True)
+            model.append((factura.id,
+                    factura.numfactura,
+                    factura.cliente.nombre,
+                    utils.str_fecha(factura.fecha),
+                    #utils.float2str(importe),
+                    str(importe),
+                    factura.estado(),#TODO "Pagado o no pagado
+                    utils.str_fecha(factura.fecha_vencimiento()),
+                    utils.str_fecha(factura.fecha_pago()),
+                    False,
+                    factura.id))
+        self.colorear(self.wids['tv_datos'])
 
-    def add_srv(self, boton):
-        self.crear_servicio()
+    def colorear(self, tv):
 
-    def clon_srv(self, boton):
-        """
-        Busca un servicio existente en la BD (previamente facturado, 
-        por tanto) y crea un nuevo servicio idéntico pero asociado a
-        la factura actual.
-        """
-        a_buscar = utils.dialogo_entrada(titulo = 'BUSCAR SERVICIO FACTURADO',
-                                         texto = 'Introduzca un concepto (o parte) ya facturado:', 
-                                         padre = self.wids['ventana'])
-        servicios = pclases.Servicio.select(pclases.Servicio.q.concepto.contains(a_buscar), orderBy = "concepto")
-        filas = [(s.id,
-                  s.concepto, 
-                  s.precio, 
-                  (s.facturaVenta and s.facturaVenta.numfactura) or (s.prefactura and s.prefactura.numfactura) or '', 
-                  (s.facturaVenta and s.facturaVenta.cliente and s.facturaVenta.cliente.nombre) or 
-                    (s.prefactura and s.prefactura.cliente and s.prefactura.cliente.nombre) or '')
-                  for s in servicios]
-        res = utils.dialogo_resultado(filas,
-                                      "SELECCIONE SERVICIO",
-                                      cabeceras = ('ID', 'Concepto', 'Precio', 'Facturado en', 'Cliente'),
-                                      multi = True, 
-                                      padre = self.wids['ventana'])
-        if res[0] > 0:
-            for idservicio in res:
-                servicio = pclases.Servicio.get(idservicio)
-                nuevo_servicio = pclases.Servicio(facturaVenta = self.objeto,
-                                                  concepto = servicio.concepto,
-                                                  precio = servicio.precio,
-                                                  descuento = servicio.descuento)
-            self.rellenar_servicios()
-            self.rellenar_vencimientos()    # Para que verifique si los totales coinciden
-        
-    def drop_srv(self, boton):
-        if self.wids['tv_servicios'].get_selection().count_selected_rows()!=0:
-            model,iter=self.wids['tv_servicios'].get_selection().get_selected()
-            idservicio = model[iter][-1]
-            servicio = pclases.Servicio.get(idservicio)
-            servicio.facturaVenta = None
-            if servicio.albaranSalida == None:
-                servicio.destroySelf()  # No debería saltar ninguna excepción. 
-            self.rellenar_servicios()
+        def cell_func(column, cell, model, itr):
+            estado = model[itr][5]
+            if estado == "Vencido":
+                color = "orange"
+            elif estado == "Enviado":
+                color = "light green"
+            elif estado == "No enviado":
+                color = "light blue"
+            elif estado == "Cobrado":
+                color = "green"
+            elif estado == "ERROR":
+                color = "red"
+            else:
+                color = None
+            cell.set_property("cell-background", color)
 
-    def rellenar_vencimientos(self):
-        if self.objeto:
-            model = self.wids['tv_vencimientos'].get_model()
-            model.clear()
-            total_vtos = 0.0
-            total_cobros = 0.0
-            vencido = 0.0
-            vtos = self.objeto.vencimientosCobro[:]
-            vtos.sort(utils.cmp_fecha_id)
-            for vto in vtos:
-                model.append((utils.str_fecha(vto.fecha), 
-                              utils.float2str(vto.importe), 
-                              vto.id))
-                total_vtos += vto.importe
-                if vto.fecha >= mx.DateTime.localtime():
-                    vencido += vto.importe
-            model = self.wids['tv_cobros'].get_model()
-            model.clear()
-            cobros = self.objeto.cobros[:]
-            cobros.sort(utils.cmp_fecha_id)
-            for cobro in cobros:
-                model.append((utils.str_fecha(cobro.fecha), 
-                              utils.float2str(cobro.importe), 
-                              cobro.observaciones, 
-                              cobro.id))
-                total_cobros += cobro.importe
-            self.wids['e_total_vtos'].set_text(utils.float2str(total_vtos))
-            self.wids['e_total_pagado'].set_text(utils.float2str(total_cobros))
-            self.wids['e_total_vencido'].set_text(utils.float2str(vencido))
-            self.wids['e_pendiente'].set_text(utils.float2str(total_vtos - total_cobros))
-            if (self.objeto.vencimientosCobro and 
-                (int(round(total_vtos * 100)) != 
-                    int(round(self.objeto.calcular_importe_total(iva = True)*100)))):
-                utils.dialogo_info(titulo = "VERIFIQUE LOS VENCIMIENTOS", 
-                                   texto = "El importe total de los vencimientos no coincide con el importe total de la factura.", 
-                                   padre = self.wids['ventana'])
-
-    def crear_vtos_defecto(self, boton):
-        if self.objeto:
-            vtos_creados = self.objeto.crear_vencimientos_por_defecto()
-            if not vtos_creados:
-                utils.dialogo_info(
-                    titulo = "CLIENTE SIN VENCIMIENTOS DEFINIDOS", 
-                    texto = "El cliente no tiene definidos vencimientos por\n"
-                            "defecto. Se creará un vencimiento genérico, \n"
-                            "pero asegúrese de completar la información del\n"
-                            "cliente si quiere usar esta funcionalidad.", 
-                    padre = self.wids['ventana'])
-                self.objeto.crear_vencimientos_por_defecto(forzar = True)
-            self.rellenar_vencimientos()
-
-    def cambiar_fecha_vto(self, cell, path, texto):
-        model = self.wids['tv_vencimientos'].get_model()
-        id = model[path][-1]
-        vto = pclases.VencimientoCobro.get(id)
-        try:
-            fecha = utils.parse_fecha(texto)
-        except:
-            utils.dialogo_info(titulo = "ERROR DE FORMATO", 
-                               texto = "El texto %s no es una fecha válida." % (
-                                texto), 
-                               padre = self.wids['ventana'])
-        else:
-            vto.fecha = fecha
-            self.rellenar_vencimientos()
-
-    def cambiar_importe_vto(self, cell, path, texto):
-        model = self.wids['tv_vencimientos'].get_model()
-        id = model[path][-1]
-        vto = pclases.VencimientoCobro.get(id)
-        try:
-            importe = utils._float(texto)
-        except:
-            utils.dialogo_info(titulo = "ERROR DE FORMATO", 
-                               texto = "El texto %s no es un importe válido."%(
-                                texto), 
-                               padre = self.wids['ventana'])
-        else:
-            vto.importe = importe
-            self.rellenar_vencimientos()
-
-    def cambiar_fecha_cobro(self, cell, path, texto):
-        model = self.wids['tv_cobros'].get_model()
-        id = model[path][-1]
-        cobro = pclases.Cobro.get(id)
-        try:
-            fecha = utils.parse_fecha(texto)
-        except:
-            utils.dialogo_info(titulo = "ERROR DE FORMATO", 
-                               texto = "El texto %s no es una fecha válida." % (
-                                texto), 
-                               padre = self.wids['ventana'])
-        else:
-            cobro.fecha = fecha
-            self.rellenar_vencimientos()
-
-    def cambiar_importe_cobro(self, cell, path, texto):
-        model = self.wids['tv_cobros'].get_model()
-        id = model[path][-1]
-        cobro = pclases.Cobro.get(id)
-        try:
-            importe = utils._float(texto)
-        except:
-            utils.dialogo_info(titulo = "ERROR DE FORMATO", 
-                               texto = "El texto %s no es un importe válido."%(
-                                texto), 
-                               padre = self.wids['ventana'])
-        else:
-            cobro.importe = importe
-            self.rellenar_vencimientos()
-
-    def cambiar_observaciones_cobro(self, cell, path, texto):
-        model = self.wids['tv_cobros'].get_model()
-        id = model[path][-1]
-        cobro = pclases.Cobro.get(id)
-        cobro.observaciones = texto
-        self.rellenar_vencimientos()
-
-    def add_vto(self, boton):
-        totalfra = self.objeto.calcular_importe_total(iva = True)
-        totalvto = sum([v.importe for v in self.objeto.vencimientosCobro])
-        importe_restante = totalfra - totalvto
-        pclases.VencimientoCobro(facturaVenta = self.objeto, 
-                                 importe = importe_restante, 
-                                 fecha = mx.DateTime.localtime())
-        self.rellenar_vencimientos()
-
-    def drop_vto(self, boton):
-        model, iter=self.wids['tv_vencimientos'].get_selection().get_selected()
-        if iter:
-            idvto = model[iter][-1]
-            vto = pclases.VencimientoCobro.get(idvto)
-            vto.destroySelf()
-            self.rellenar_vencimientos()
+        cols = tv.get_columns()
+        for i in xrange(len(cols)):
+            column = cols[i]
+            cells = column.get_cell_renderers()
+            for cell in cells:
+                column.set_cell_data_func(cell, cell_func)
 
     def add_cobro(self, boton):
-        pclases.Cobro(facturaVenta = self.objeto, 
-                      importe = 0.0, 
-                      fecha = mx.DateTime.localtime(), 
-                      observaciones = "")
-        self.rellenar_vencimientos()
+        """ Add cobro a factura seleccionada"""
+        model, path = self.wids['tv_datos'].get_selection().get_selected()
+        # TODO Ver diferencia entre importe total (IVA) e importe or cobrar
+        if path:
+            idfactura = model[path][0]
+            importe = self.add_documento(model[path][1])
+            importe = float(model[path][4])
+            scan(factura=model[path][1])
+            # Abrir ventana para adjuntar archivo y poner un importe
+            pclases.Cobro(facturaVenta=idfactura, importe=importe,
+                    fecha=mx.DateTime.localtime(), observaciones="")
+            self.rellenar_tabla()
 
-    def drop_cobro(self, boton):
-        model, iter=self.wids['tv_cobros'].get_selection().get_selected()
-        if iter:
-            idcobro = model[iter][-1]
-            cobro = pclases.Cobro.get(idcobro)
-            cobro.destroySelf()
-        self.rellenar_vencimientos()
+    def remove_cobro(self, boton):
+        """ Borrar un cobro de la factura seleccionada"""
+        model, path = self.wids['tv_datos'].get_selection().get_selected()
+        if path:
+            idfactura = model[path][0]
+            factura = pclases.FacturaVenta.get(idfactura)
+            cobros = factura.cobros[:]
+            if len(cobros) > 1:
+                #print "Borrado ultimo cobro"
+                cobros[-1].destroySelf()
+            elif len(cobros) <= 0:
+                print "No existe ningún cobro"
+            else:
+                #print "Borrado cobro"
+                cobros[0].destroySelf()
+        self.rellenar_tabla()
 
-    def imprimir(self, boton):
-        """
-        Imprime la factura.
-        """
-        utils.dialogo_info(titulo = "IMPRESIÓN CANCELADA", 
-                           texto = "Para imprimir la factura, use la ventana "
-                                   "de facturas de venta.", 
-                           padre = self.wids['ventana'])
+    #def abrir_factura(self, tv, path, col, usuario=None, ventanita=None):
+    #    """ Abre la factura seleccionada para ver los cobros por ejemplos. """
+    #    print "path", path
+    #    model = tv.get_model()
+    #    importe = float(model[path][4])
+    #    ide = model[path][0]
+    #    # Abrir ventana para adjuntar archivo y poner un importe
+    #    pclases.Cobro(facturaVenta=ide, importe=importe,
+    #            fecha=mx.DateTime.localtime(), observaciones="")
+    #    self.rellenar_tabla()
 
+    def add_documento(self, num_factura):
+        """ Muestra una ventana donde añadir un documento de pago"""
+        importe = utils.dialogo_entrada(titulo="Importe para la factura %s" %
+               (num_factura),
+               texto="Ponga el fichero de pago en el scanner y acepte. ",
+               padre=self.wids['ventana'])
+        if not importe:
+            return 0.0
+        return float(importe)
 
-if __name__ == "__main__":
-    p = CobroFacturasVenta()
-
+if __name__ == '__main__':
+    t = CobroFacturasVenta()
