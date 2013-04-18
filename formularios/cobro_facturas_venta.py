@@ -55,7 +55,7 @@ class CobroFacturasVenta(Ventana):
         """
         self.usuario = usuario
         Ventana.__init__(self, os.path.join("..", "ui",
-                'facturar_albaranes.glade'), objeto)
+                'cobro_facturas_venta.glade'), objeto)
         connections = {'b_salir/clicked': self.salir,
                        'b_add_cobro/clicked': self.add_cobro,
                        'b_remove_cobro/clicked': self.remove_cobro}
@@ -68,8 +68,6 @@ class CobroFacturasVenta(Ventana):
                 ('Estado', 'gobject.TYPE_STRING', False, True, False, None),
                 ('Fecha vto', 'gobject.TYPE_STRING', False, True, False, None),
                 ('Pagado en', 'gobject.TYPE_STRING', False, True, False, None),
-                ('Justificar pago', 'gobject.TYPE_BOOLEAN', True, True, False,
-                    self.cambiar_generar),
                 ('id', 'gobject.TYPE_STRING', False, False, False, None))
         utils.preparar_listview(self.wids['tv_datos'], cols)
         #self.wids['tv_datos'].connect("row-activated", self.abrir_factura,
@@ -83,10 +81,6 @@ class CobroFacturasVenta(Ventana):
         self.rellenar_widgets()
         self.wids['ventana'].resize(800, 600)
         gtk.main()
-
-    def cambiar_generar(self, cell, path):
-        model = self.wids['tv_datos'].get_model()
-        model[path][5] = not cell.get_active()
 
     def rellenar_widgets(self):
         series = [(s.id, s.get_next_numfactura(commit=False))
@@ -119,7 +113,6 @@ class CobroFacturasVenta(Ventana):
                     factura.estado(),#TODO "Pagado o no pagado
                     utils.str_fecha(factura.fecha_vencimiento()),
                     utils.str_fecha(factura.fecha_pago()),
-                    False,
                     factura.id))
         self.colorear(self.wids['tv_datos'])
 

@@ -30,34 +30,22 @@
             <child>
               <widget class="GtkLabel" id="label1">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Adorno</property>
+                <property name="label" translatable="yes">Serie de facturas:</property>
               </widget>
             </child>
-            <!--<child>
+            <child>
               <widget class="GtkComboBox" id="cb_serie">
                 <property name="visible">True</property>
               </widget>
               <packing>
                 <property name="position">1</property>
               </packing>
-            </child>-->
-            <child>
-              <widget class="GtkButton" id="b_remove_cobro">
-                <property name="label">Borrar cobro</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="use_stock">True</property>
-                <property name="response_id">0</property>
-              </widget>
-              <packing>
-                <property name="position">1</property>
-              </packing>
             </child>
             <child>
-              <widget class="GtkButton" id="b_add_cobro">
-                <property name="label">Añadir cobro</property>
+              <widget class="GtkButton" id="b_doit">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="label">gtk-apply</property>
                 <property name="use_stock">True</property>
                 <property name="response_id">0</property>
               </widget>
