@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -1677,7 +1678,7 @@ def get_configuracion_ftp():
     except:
         try:
             import os
-            f = open(os.path.join('..', 'framework', 'nftp.conf'))
+            f = open(os.path.join('framework', 'nftp.conf'))
         except:
             return None
     res = {'host': '', 'user': '', 'passwd': ''}
@@ -2404,9 +2405,9 @@ def pedir_producto_compra(padre = None, proveedor = None):
     proveedor -> Si es != None, sólo buscará entre los productos de ese 
     proveedor.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     producto = None
     codigo_o_descripcion = dialogo_entrada(titulo = "BUSCAR PRODUCTO", 
                     texto = "Introduzca código o descripción del producto:", 
@@ -2530,9 +2531,9 @@ def buscar_productos_compra(a_buscar, incluir_obsoletos = False):
     # >>> c = pcs.count()
     # >>> pcs[0].obsoleto = True
     # >>> assert pcs.count() == c - 1
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     PC = pclases.ProductoCompra
     subcriterios = [PC.q.codigo.contains(t) for t in a_buscar.split()]
     if subcriterios:
@@ -2574,9 +2575,9 @@ def buscar_productos_venta(a_buscar):
     "codigoComposan" de la tabla campos_especificos_rollo.
     Devuelve una lista de objetos productoVenta.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     criterio = pclases.OR(pclases.ProductoVenta.q.codigo.contains(a_buscar),
                         pclases.ProductoVenta.q.nombre.contains(a_buscar),
                         pclases.ProductoVenta.q.descripcion.contains(a_buscar))
@@ -2603,9 +2604,9 @@ def buscar_producto_general(padre = None,
     Si «saltar_dialogo» es True va directamente a los resultados de 
     la palabra sugerida en "texto_defecto".
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     res = []
     if not saltar_dialogo:
         a_buscar = dialogo_entrada(titulo = "BUSCAR PRODUCTO", 
@@ -2724,7 +2725,7 @@ def buscar_producto_general(padre = None,
                     res.append(pclases.ProductoVenta.get(id))
             if res == []:
                 try:
-                    sys.path.append(os.path.join("..", "utils"))
+                    sys.path.append(os.path.join("utils"))
                     import spelling
                     res = sugerir_alternativa(a_buscar, 
                                               padre, 
@@ -2752,10 +2753,10 @@ def sugerir_alternativa(txt, padre, mostrar_precios, incluir_sin_iva):
     import spelling
     palabras = []
     try:
-        import pclases
+        from framework import pclases
     except ImportError:
-        sys.path.append(os.path.join("..", "framework"))
-        import pclases
+        sys.path.append(os.path.join("framework"))
+        from framework import pclases
     for pc in pclases.ProductoCompra.select():
         palabras.append(pc.codigo.lower())
         palabras.append(pc.descripcion.lower())
@@ -2904,9 +2905,9 @@ def descargar_phaser(logger = None, datos = None):
     lista_articulos = []    # Lista de rollos, bigbags y balas leídos.
     dic_articulos = {}      # Diccionario organizado por albaranes o partidas de carga, si fuera necesario.
     if datos != []:
-        import sys, os
-        sys.path.append(os.path.join("..", "framework"))
-        import pclases
+        import os
+        sys.path.append(os.path.join("framework"))
+        from framework import pclases
         clave = None
         for codigo in datos:
             codigo = codigo.strip()
@@ -2968,9 +2969,9 @@ def procesar_albaran(codigo, logger = None):
     Busca un albarán con número `codigo.replace("A", "")` y devuelve 
     el objeto encontrado o None si no se encontró.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     numalbaran = codigo.replace("A", "")
     albaranes = pclases.AlbaranSalida.select(pclases.AlbaranSalida.q.numalbaran == numalbaran)
     if albaranes.count() == 0:
@@ -2991,9 +2992,9 @@ def procesar_rollo(codigo, logger = None):
     Busca un rollo con el código recibido y devuelve 
     el objeto encontrado o None si no se encontró.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     rollos = pclases.Rollo.select(pclases.Rollo.q.codigo == codigo)
     if rollos.count() == 0:
         rollo = None
@@ -3020,9 +3021,9 @@ def procesar_bala(codigo, logger = None):
     Busca un bala con el código recibido y devuelve 
     el objeto encontrado o None si no se encontró.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     balas = pclases.Bala.select(pclases.Bala.q.codigo == codigo)
     if balas.count() == 0:
         bala = None
@@ -3049,9 +3050,9 @@ def procesar_bigbag(codigo, logger = None):
     Busca un bigbag con el código recibido y devuelve 
     el objeto encontrado o None si no se encontró.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     bigbags = pclases.Bigbag.select(pclases.Bigbag.q.codigo == codigo)
     if bigbags.count() == 0:
         bigbag = None
@@ -3078,9 +3079,9 @@ def procesar_gtxc(codigo, logger = None):
     Busca un geotextil C con el código recibido y devuelve 
     el objeto encontrado o None si no se encontró.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     gtxcs = pclases.RolloC.select(pclases.RolloC.q.codigo == codigo)
     if gtxcs.count() == 0:
         gtxc = None
@@ -3107,9 +3108,9 @@ def procesar_partida_carga(codigo, logger = None):
     Busca una partida carga con número `codigo.replace("PC", "")` y devuelve 
     el objeto encontrado o None si no se encontró.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     #numpartida_carga = codigo.replace("PC", "")
     #partidas_carga = pclases.PartidaCarga.select(pclases.PartidaCarga.q.codigo == numpartida_carga)
     partidas_carga = pclases.PartidaCarga.select(pclases.PartidaCarga.q.codigo == codigo)
@@ -3385,7 +3386,7 @@ def dialogo_adjuntar(titulo, objeto, padre = None):
                 valor_por_defecto = os.path.split(fichero)[-1], 
                 padre = padre)
         if nombre:
-            import pclases
+            from framework import pclases
             pclases.Documento.adjuntar(fichero, objeto, nombre)
 
 def mover_a_tmp(ruta):
@@ -3413,11 +3414,11 @@ def buscar_factura(ventana_padre = None, multi = False, filtrar = False, cliente
     criterios para realizar la búsqueda.
     """
     try:
-        import pclases
+        from framework import pclases
     except ImportError:
-        import sys, os
-        sys.path.insert(0, os.path.join("..", "framework"))
-        import pclases
+        import os
+        sys.path.insert(0, os.path.join("framework"))
+        from framework import pclases
     res = None
     if filtrar:
         a_buscar = dialogo_entrada(titulo = "BUSCAR FACTURA", 
@@ -3472,12 +3473,12 @@ def abrir_factura_venta(id, num, usuario = None):
     En otro caso abre la ventana y devuelve True.
     """
     try:
-        import pclases
+        from framework import pclases
     except ImportError:
         from os.path import join as pathjoin
         from sys import path
-        path.insert(0, pathjoin("..", "framework"))
-        import pclases
+        path.insert(0, pathjoin("framework"))
+        from framework import pclases
     print id, num
     try:
         fra = pclases.FacturaVenta.get(id)
@@ -3493,7 +3494,7 @@ def abrir_factura_venta(id, num, usuario = None):
             except ImportError:
                 from os.path import join as pathjoin
                 from sys import path
-                path.insert(0, pathjoin("..", "formularios"))
+                path.insert(0, pathjoin("formularios"))
                 import facturas_venta
             ventana = facturas_venta.FacturasVenta(fra, usuario)
         else:
@@ -3509,12 +3510,12 @@ def abrir_prefactura(id, num, usuario = None):
     En otro caso abre la ventana y devuelve True.
     """
     try:
-        import pclases
+        from framework import pclases
     except ImportError:
         from os.path import join as pathjoin
         from sys import path
-        path.insert(0, pathjoin("..", "framework"))
-        import pclases
+        path.insert(0, pathjoin("framework"))
+        from framework import pclases
     try:
         fra = pclases.Prefactura.get(id)
     except pclases.SQLObjectNotFound:
@@ -3527,7 +3528,7 @@ def abrir_prefactura(id, num, usuario = None):
             except ImportError:
                 from os.path import join as pathjoin
                 from sys import path
-                path.insert(0, pathjoin("..", "formularios"))
+                path.insert(0, pathjoin("formularios"))
                 import prefacturas
             ventana = prefacutras.Prefacutras(fra, usuario)
         else:
@@ -3619,9 +3620,9 @@ def seleccionar_tipo_repuesto(ventana_padre = None):
     """
     Muestra un diálogo con un combo para seleccionar un tipo de repuesto.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     res = None
     tipos = pclases.TipoDeMaterial.select(pclases.OR(
         pclases.TipoDeMaterial.q.descripcion.contains("repuesto"), 
@@ -3646,9 +3647,9 @@ def seleccionar_repuesto(tipo, ventana_padre = None, dejar_crear = True):
     Muestra un dialogo_combo con los productos de compra de repuestos del 
     tipo "tipo". Si dejar_crear = True permite crear un producto no listado.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "framework"))
-    import pclases
+    import os
+    sys.path.append(os.path.join("framework"))
+    from framework import pclases
     res = None
     idtipo = tipo.id
     prods = pclases.ProductoCompra.select(pclases.AND(
@@ -3892,7 +3893,7 @@ def media(valores):
     return mean
 
 if __name__=="__main__":
-    import sys, os
+    import os
     print dialogo_radio(titulo='Seleccione una opción', 
                 texto='Selecciona una opción del radiobutton y tal y cual.', 
                 ops=[(0, 'Sin opciones'), (1, "Una opción"), (2, "Y otra"), 
@@ -3906,8 +3907,8 @@ if __name__=="__main__":
     print "Debe responder False: ", dialogo(titulo = "PRUEBA", texto = "Probando", defecto = False, tiempo = 4)
     print "Debe responder gtk.RESPONSE_CANCEL: ", dialogo(titulo = "PRUEBA", texto = "Probando", cancelar = True, defecto = gtk.RESPONSE_CANCEL, tiempo = 6)
     sys.exit(0)
-    sys.path.insert(0, os.path.join("..", "framework"))
-    import pclases
+    sys.path.insert(0, os.path.join("framework"))
+    from framework import pclases
     #l = [filtrar_tildes(p.documentodepago.split(" ")[0].lower()) for p in pclases.Proveedor.select()]
     l = [filtrar_tildes(p.documentodepago) for p in pclases.Proveedor.select()]
     l = [e.strip().split(" ")[0].lower() for e in l]

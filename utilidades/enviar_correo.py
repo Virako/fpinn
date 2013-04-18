@@ -49,7 +49,7 @@ def enviar_correo(subject, destino, text, pdfs=[]):
     # Adjuntamos pdfs
     for pdf in pdfs:
         try:
-            file = open("../factura/" + pdf, "rb")
+            file = open("factura/" + pdf, "rb")
         except:
             print "Archivo %s no encontrado. " % pdf
             continue

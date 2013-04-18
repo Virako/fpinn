@@ -13,8 +13,7 @@ print
 
 # 1.- Datos básicos: 
 # Datos de la empresa, propia empresa como cliente y como proveedor.
-sys.path.append(os.path.join("..", "framework"))
-import pclases
+from framework import pclases
 dde = pclases.DatosDeLaEmpresa()
 cliente = pclases.Cliente(nombre = dde.nombre, 
                           cif = dde.cif, 

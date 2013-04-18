@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -29,19 +30,15 @@
 ###################################################################
 ## 
 ###################################################################
-import pygtk
+import sys
 #pygtk.require('2.0')
 import gtk, gtk.glade, gobject, utils, pango
-import sys, os
-sys.path.insert(0, os.path.join('..', 'SQLObject', 'SQLObject-0.6.1'))
+import os
 import sqlobject
 from widgets import Widgets
 
-path_framework = os.path.join("..", "framework")
-if path_framework not in sys.path:
-    sys.path.append(path_framework)
-from configuracion import ConfigConexion
-import pclases
+from framework.configuracion import ConfigConexion
+from framework import pclases
 
 def refrescar_cache_sqlobject():
     """
@@ -232,7 +229,7 @@ class Ventana:
         PRECONDICION: self.__usuario debe ser un objeto usuario.
         """
         res = ""
-        import pclases
+        from framework import pclases
         for modulo in [m for m in pclases.Modulo.select(orderBy = "nombre") \
                        if len([p.ventana for p in self.__usuario.permisos if p.permiso and p.ventana.modulo == m]) > 0]: 
             res += """<menu name="%s" action="M%d">""" % (modulo.nombre, modulo.id)
@@ -295,7 +292,7 @@ class Ventana:
         Construye una lista de acciones de menú compatible 
         con UIManager.
         """
-        import pclases
+        from framework import pclases
         acciones = []
         for modulo in [m for m in pclases.Modulo.select(orderBy = "nombre") 
                        if len([p.ventana 
@@ -405,7 +402,7 @@ class Ventana:
         """
         try:
             pwd = os.path.abspath(os.curdir)
-            os.chdir(os.path.join('..', 'gajim-0.9.1', 'src'))
+            os.chdir(os.path.join('gajim-0.9.1', 'src'))
             sys.path.append('.')
             if os.name == 'posix':
                 os.system("cd .. && ./launch.sh >/dev/null &")
@@ -446,9 +443,9 @@ class Ventana:
         vacerca.set_version(_VERSION)
         vacerca.set_comments('Software ERP para FresParaíso')
         vacerca.set_authors(['Francisco José Rodríguez Bogado <rodriguez.bogado@gmail.com>', 'Diego Muñoz Escalante <escalant3@gmail.com>'])
-        logo = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', 'logo.jpg'))
+        logo = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', 'logo.jpg'))
         vacerca.set_logo(logo)
-        vacerca.set_license(open(os.path.join('..', 'gpl.txt')).read())
+        vacerca.set_license(open(os.path.join('gpl.txt')).read())
         vacerca.set_website('http://fpinn.sf.net')
         vacerca.set_artists(['Iconos gartoon por Kuswanto (a.k.a. Zeus) <zeussama@gmail.com>'])
         vacerca.set_copyright('Copyright 2005-2008  Francisco José Rodríguez Bogado.')

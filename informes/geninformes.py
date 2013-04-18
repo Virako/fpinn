@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008 Francisco José Rodríguez Bogado,                    #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -28,24 +29,12 @@ import reportlab
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import inch, cm
-import gobject
 import mx
 import mx.DateTime
 
-import sys, os
-sys.path.insert(0, os.path.join('..', 'SQLObject', 'SQLObject-0.6.1'))
-import sqlobject
-try:
-    import pclases
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-try:
-    import utils
-except ImportError:
-    sys.path.append(os.path.join('..', 'formularios'))
-    import utils
-import time
+import os
+from framework import pclases
+from formularios import utils
 from tempfile import gettempdir
 
 # Medidas fundamentales
@@ -168,7 +157,7 @@ def cabecera(c, texto, fecha = None, apaisado = False):
 
     xIzquierda = lm -4
     rectangulo(c, (xIzquierda, tm+2*inch), (rm, bm-0.2*inch))
-    c.drawImage(os.path.join('..', 'imagenes', datos_empresa.logo), lm+0.1*inch, height - 1*inch, 0.7*inch, 0.7*inch)
+    c.drawImage(os.path.join('imagenes', datos_empresa.logo), lm+0.1*inch, height - 1*inch, 0.7*inch, 0.7*inch)
     c.setFont("Helvetica", 20)
     
     el_encogedor_de_fuentes_de_doraemon(c, "Helvetica", 20, lm+inch, rm, height-0.75*inch, texto, alineacion = 0)
@@ -478,7 +467,7 @@ def agregarFila(origen,
 
 def exportar_a_csv(ruta, cabecera, datos):
     import treeview2csv
-    ruta_form = os.path.join("..", "formularios")
+    ruta_form = os.path.join("formularios")
     if ruta_form not in sys.path:
         sys.path.append(ruta_form)
     from informes import abrir_csv
@@ -900,9 +889,7 @@ def probar_fuentes_disponibles():
     Crea y abre un PDF con las fuentes disponibles en la 
     instalación de ReportLab local.
     """
-    import sys, os
-    sys.path.append(os.path.join("..", "formularios"))
-    sys.path.append(os.path.join("..", "framework"))
+    import os
     from informes import abrir_pdf
 
     y = A4[1] - 3 * cm

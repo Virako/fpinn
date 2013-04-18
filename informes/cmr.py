@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2008 Francisco José Rodríguez Bogado,                    #
 #                         (pacoqueen@users.sourceforge.net)                   #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of FPINN.                                                 #
 #                                                                             #
@@ -22,34 +23,15 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA  #
 ###############################################################################
 
-import reportlab
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import A4
-import mx, mx.DateTime
 
-import sys, os
-try:
-    import pclases
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-try:
-    import utils
-except ImportError:
-    sys.path.append(os.path.join('..', 'formularios'))
-    import utils
-try:
-    import geninformes
-except ImportError:
-    try:
-        sys.path.append(os.path.insert(0, '.'))
-        import geninformes
-    except ImportError:
-        sys.path.append(os.path.join('..', 'informes'))
-        import geninformes
+import os
+from framework import pclases
+from formularios import utils
+from informes import geninformes
 from tempfile import gettempdir
-import Image, ImageEnhance
 
 def go(dde_nombre = "",
        dde_direccion1 = "",
@@ -218,7 +200,7 @@ def dibujar_imprenta(c, tampag):
     Dibuja el "esqueleto" del CMR. Viene de imprenta en las
     hojas reales y es independiente de los datos.
     """
-    fondo = os.path.join("..", "imagenes", "cmr.png")
+    fondo = os.path.join("imagenes", "cmr.png")
     c.drawImage(fondo, 0, 0, tampag[0], tampag[1])
 
 def go_from_albaranSalida(albaran, solo_texto = False, porteador = "", 
@@ -305,7 +287,6 @@ def go_from_albaranSalida(albaran, solo_texto = False, porteador = "",
               ciudad_formalizado)
 
 def prueba_albaran():
-    sys.path.append("../formularios")
     from informes import abrir_pdf
     abrir_pdf(go_from_albaranSalida(pclases.AlbaranSalida.select()[-1]))
     import time

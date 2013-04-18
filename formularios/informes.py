@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -50,7 +51,7 @@ except ImportError:
   sys.path.append('../informes')
   import geninformes
 
-import utils
+from formularios import utils
 
 def abrir_pdf(pdf):
     """

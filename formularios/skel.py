@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 #                          (pacoqueen@users.sourceforge.net                   #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -39,27 +40,22 @@
 ## 
 ###################################################################
 
-import sys, os
-from ventana import Ventana
-import utils
+import os
+from formularios.ventana import Ventana
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
 import gtk, gtk.glade, time, mx, mx.DateTime
-try:
-    import pclases
-    from seeker import VentanaGenerica 
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-    from seeker import VentanaGenerica 
-from utils import _float as float
-import adapter
+from framework import pclases
+from formularios.seeker import VentanaGenerica
+from formularios.utils import _float as float
+from framework import adapter
 
 DEBUG = False
 
 class Skel(Ventana, VentanaGenerica):
     CLASE = pclases.XXX
-    VENTANA = os.path.join("..", "ui", "XXX.glade")
+    VENTANA = os.path.join("ui", "XXX.glade")
     def __init__(self, objeto = None, usuario = None):
         """
         Constructor. objeto puede ser un objeto de pclases con el que

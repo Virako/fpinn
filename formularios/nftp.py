@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -41,7 +42,7 @@ Debe existir un archivo ../framework/nftp.conf con
 una entrada para la configuración ginn.
 """
 
-import sys, os, re, ftplib
+import os, re, ftplib
 from optparse import OptionParser
 
 ##config = os.path.expanduser('~/.nftprc')
@@ -62,8 +63,8 @@ def getConfig(name=None):
       s = open('nftp.conf').read()
    elif os.path.exists(home + 'nftp.conf'): 
       s = open(home + 'nftp.conf').read()
-   elif os.path.exists(os.path.join('..', 'framework', 'nftp.conf')):
-      s = open(os.path.join('..', 'framework', 'nftp.conf'))
+   elif os.path.exists(os.path.join('framework', 'nftp.conf')):
+      s = open(os.path.join('framework', 'nftp.conf'))
    else: return {}
 
    # Parse the config file

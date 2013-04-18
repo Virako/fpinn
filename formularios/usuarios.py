@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -44,17 +45,13 @@
 ## 
 ###################################################################
 
-from ventana import Ventana
-import utils
+from formularios.ventana import Ventana
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
-import sys, os 
-try:
-    import pclases
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-import gtk, gtk.glade, time, sqlobject, mx
+import os 
+from framework import pclases
+import gtk, gtk.glade, sqlobject, mx
 import mx.DateTime
 import gobject
 try:
@@ -70,7 +67,7 @@ class Usuarios(Ventana):
         el que se muestra por defecto).
         """
         self.usuario = usuario
-        Ventana.__init__(self, 'usuarios.glade', objeto, usuario=self.usuario)
+        Ventana.__init__(self, os.path.join("ui", 'usuarios.glade'), objeto, usuario=self.usuario)
         connections = {'b_salir/clicked': self.salir,
                        'b_actualizar/clicked': self.actualizar_ventana, 
                        'b_guardar/clicked': self.guardar, 
@@ -262,9 +259,9 @@ class Usuarios(Ventana):
         model.clear()
         for m in pclases.Modulo.select():
             try:
-                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', m.icono))
+                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', m.icono))
             except (gobject.GError, AttributeError):
-                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', 'dorsia.png'))
+                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', 'dorsia.png'))
             iterpadre = model.append(None, (m.nombre, 
                                             m.descripcion, 
                                             m.icono,
@@ -272,9 +269,9 @@ class Usuarios(Ventana):
                                             m.id))
             for v in m.ventanas:
                 try:
-                    pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', v.icono))
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', v.icono))
                 except (gobject.GError, AttributeError):
-                    pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', 'dorsia.png'))
+                    pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', 'dorsia.png'))
                 model.append(iterpadre, (v.fichero,
                                          v.descripcion, 
                                          v.icono,
@@ -286,9 +283,9 @@ class Usuarios(Ventana):
         model.clear()
         for v in pclases.Ventana.select():
             try:
-                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', v.icono))
+                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', v.icono))
             except (gobject.GError, AttributeError):
-                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', 'dorsia.png'))
+                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', 'dorsia.png'))
             model.append((v.descripcion, 
                           v.fichero, 
                           v.clase, 

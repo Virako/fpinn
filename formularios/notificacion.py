@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -83,7 +84,7 @@ class Notificacion:
     # print "EJECUTO", self.__func
     try:
         self.__func(*args, **kwargs)
-    except (AttributeError, KeyError), msg:
+    except (AttributeError, KeyError):
         pass    # La ventana se ha cerrado y el objeto sigue en memoria. No 
                 # tiene importancia.
         #print "notificacion::run -> Ventana cerrada. Ignorando notificación"

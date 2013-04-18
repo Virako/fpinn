@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 #                          (pacoqueen@users.sourceforge.net                   #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -29,27 +30,22 @@
 ## 
 ###################################################################
 
-import sys, os
-from ventana import Ventana
-import utils
+import os
+from formularios.ventana import Ventana
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
 import gtk, gtk.glade, time, mx, mx.DateTime
-try:
-    import pclases
-    from seeker import VentanaGenerica 
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-    from seeker import VentanaGenerica 
-from utils import _float as float
-import adapter
+from framework import pclases
+from formularios.seeker import VentanaGenerica
+from formularios.utils import _float as float
+from framework import adapter
 
 DEBUG = False
 
 class AlbaranesDeSalida(Ventana, VentanaGenerica):
     CLASE = pclases.AlbaranSalida
-    VENTANA = os.path.join("..", "ui", "albaranes_de_salida.glade")
+    VENTANA = os.path.join("ui", "albaranes_de_salida.glade")
     def __init__(self, objeto = None, usuario = None):
         """
         Constructor. objeto puede ser un objeto de pclases con el que
@@ -986,7 +982,7 @@ class AlbaranesDeSalida(Ventana, VentanaGenerica):
                 import albaran
                 from informes import abrir_pdf
             except ImportError:
-                sys.path.append(os.path.join("..", "informes"))
+                sys.path.append(os.path.join("informes"))
                 import albaran
                 from informes import abrir_pdf
             fpdf = albaran.go_from_albaranSalida(self.objeto, solo_texto = r)
@@ -1073,7 +1069,7 @@ def buscar_producto(padre = None):
     se cancela.
     """
     res = [None, None]
-    gladewids = gtk.glade.XML(os.path.join("..","ui","buscar_producto.glade"))
+    gladewids = gtk.glade.XML(os.path.join("ui","buscar_producto.glade"))
     ventana = gladewids.get_widget("ventana")
     b_aceptar = gladewids.get_widget("b_aceptar")
     b_cancelar = gladewids.get_widget("b_cancelar")

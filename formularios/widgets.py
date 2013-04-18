@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2012  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 #                          (bogado@qinn.es, escalant3@users.sourceforge.net)  #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -73,7 +74,7 @@ class Widgets:
         except (TypeError, KeyError):
             try:    # ¿Glade 3?
                 res = self.widgets.get_widget(key)
-            except Exception, e:
+            except Exception:
                 # print "------------------>", e
                 res = None
         #res = self.widgets.get_widget(key)

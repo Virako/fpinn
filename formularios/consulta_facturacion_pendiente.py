@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -30,22 +31,18 @@
 ###################################################################
 
 import os
-from ventana import Ventana
-import utils
+from formularios.ventana import Ventana
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
 import gtk, gtk.glade, time, sqlobject
 import sys
-try:
-    import pclases
-except ImportError:
-    from os.path import join as pathjoin; sys.path.append(pathjoin("..", "framework"))
-    import pclases
+from framework import pclases
 import mx, mx.DateTime
 sys.path.append('.')
 import ventana_progreso
 import re
-from utils import _float as float
+from formularios.utils import _float as float
 
 class ConsultaFacturacionPendiente(Ventana):
     inicio = None
@@ -98,8 +95,8 @@ class ConsultaFacturacionPendiente(Ventana):
         """
         Exporta el contenido del TreeView a un fichero csv.
         """
-        import sys, os
-        sys.path.append(os.path.join("..", "informes"))
+        import os
+        sys.path.append(os.path.join("informes"))
         from treeview2csv import treeview2csv
         from informes import abrir_csv
         tv = self.wids['tv_datos']
@@ -161,8 +158,8 @@ class ConsultaFacturacionPendiente(Ventana):
         """
         Prepara la vista preliminar para la impresión del informe
         """
-        import sys, os
-        sys.path.append(os.path.join("..", "informes"))
+        import os
+        sys.path.append(os.path.join("informes"))
         from treeview2pdf import treeview2pdf
         from informes import abrir_pdf
         if self.inicio == None:

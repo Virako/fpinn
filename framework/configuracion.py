@@ -5,6 +5,7 @@
 # Copyright (C) 2005, 2006 Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -61,11 +62,11 @@ class ConfigConexion:
         if not os.path.exists(self.__fileconf):
             self.__fileconf = os.path.join('framework', fileconf)
         if not os.path.exists(self.__fileconf):
-            self.__fileconf = os.path.join('..', 'framework', fileconf)
+            self.__fileconf = os.path.join('framework', fileconf)
         if not os.path.exists(self.__fileconf):
             # Es posible que estemos en un directorio más interno. Como por 
             # ejemplo, cuando se genera la documentación.
-            self.__fileconf = os.path.join('..', '..', 'framework', fileconf)
+            self.__fileconf = os.path.join('framework', fileconf)
         try:
             self.__fileconf = open(self.__fileconf)
         except IOError:

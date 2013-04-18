@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -46,17 +47,12 @@
 ## cuando se accede a un widget que no existe, en lugar de devolver
 ## None. Opino.
 ###################################################################
-import utils
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
-import sys, os
-sys.path.insert(0, os.path.join('..', 'SQLObject', 'SQLObject-0.6.1'))
+import os
 import gtk, gtk.glade, time, sqlobject
-try:
-    import pclases
-except ImportError:
-    from os.path import join as pathjoin; sys.path.append(pathjoin("..", "framework"))
-    import pclases
+from framework import pclases
 from widgets import Widgets
 
 def eliminar_temporales():

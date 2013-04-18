@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005, 2006 Francisco José Rodríguez Bogado,                   #
 #                          (pacoqueen@users.sourceforge.net)                  #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -24,7 +25,7 @@
 
 import sys
 import sqlobject, gtk
-from utils import combo_set_from_db, \
+from formularios.utils import combo_set_from_db, \
                   str_fecha, \
                   str_fechahoralarga, \
                   str_hora, \
@@ -199,7 +200,7 @@ def convertir_a_flotante(valor, vdefecto = 0.0, col = None):
     Fuerza la comprobación de porcentaje si col es distinto de None y 
     está entre las columnas a tratar así.
     """
-    from utils import _float, parse_porcentaje
+    from formularios.utils import _float, parse_porcentaje
     try:
         if col != None and col.name in NOMBRES_COLUMNAS_PORCENTAJE:
             raise Exception, "Forzando comprobación de porcentaje."
@@ -219,21 +220,21 @@ def convertir_a_booleano(valor, vdefecto = False):
         return vdefecto
 
 def convertir_a_fechahora(valor, vdefecto = mx.DateTime.localtime()):
-    from utils import parse_fechahora
+    from formularios.utils import parse_fechahora
     try:
         return parse_fechahora(valor)
     except:
         return vdefecto
 
 def convertir_a_fecha(valor, vdefecto = mx.DateTime.localtime()):
-    from utils import parse_fecha
+    from formularios.utils import parse_fecha
     try:
         return parse_fecha(valor)
     except:
         return vdefecto
 
 def convertir_a_hora(valor, vdefecto = mx.DateTime.localtime()):
-    from utils import parse_hora
+    from formularios.utils import parse_hora
     try:
         return parse_hora(valor)
     except:
@@ -417,7 +418,7 @@ class Adaptador:
         recibida y asocia un model sencillo al widget, que debe ser 
         un ComboBox[Entry].
         """
-        import pclases
+        from framework import pclases
         nomclase = col.name.replace("ID", "")
         nomclase = nomclase[0].upper() + nomclase[1:]
         clase = getattr(pclases, nomclase)
@@ -437,7 +438,7 @@ class Adaptador:
         w.set_property("name", nombre)
         if (isinstance(w, self.TUPLACOMBO) 
            and isinstance(col, sqlobject.SOForeignKey)):
-            import pclases
+            from framework import pclases
             tablajena = getattr(pclases, col.foreignKey)
             texto = tablajena.sqlmeta.columnList[0]
             ops = []
@@ -482,7 +483,7 @@ def adaptar_clase(clase_pclases, widgets = {}):
     return adaptador
 
 if __name__ == "__main__":
-    import pclases
+    from framework import pclases
     c = pclases.Cliente.select()[0]
     a = Adaptador()
     a.adaptar(pclases.Cliente.sqlmeta.columnList[0])

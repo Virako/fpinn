@@ -28,21 +28,16 @@
 ###################################################################
 
 import os
-from ventana import Ventana
-import utils
-import pygtk
-pygtk.require('2.0')
 import gtk
 import gtk.glade
 import mx
 import mx.DateTime
-import sys
-from os.path import join as pathjoin
-sys.path.append(pathjoin("..", "framework"))
-import pclases
-sys.path.append("../utilidades")
-from scan import scan
-from enviar_correo import enviar_correo
+
+from formularios import utils
+from formularios.ventana import Ventana
+from framework import pclases
+from utilidades.scan import scan
+from utilidades.enviar_correo import enviar_correo
 
 
 class CobroFacturasVenta(Ventana):
@@ -54,7 +49,7 @@ class CobroFacturasVenta(Ventana):
         el que se muestra por defecto).
         """
         self.usuario = usuario
-        Ventana.__init__(self, os.path.join("..", "ui",
+        Ventana.__init__(self, os.path.join("ui",
                 'cobro_facturas_venta.glade'), objeto)
         connections = {'b_salir/clicked': self.salir,
                        'b_add_cobro/clicked': self.add_cobro,

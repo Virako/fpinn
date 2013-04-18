@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 #                          (pacoqueen@users.sourceforge.net                   #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -34,31 +35,19 @@
 ## 
 ###################################################################
 
-import sys, os
-import utils
+import os
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
-import gtk, gtk.glade, time, mx, mx.DateTime
-try:
-    import pclases
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-from ventana import Ventana
-try:
-    from treeview2pdf import treeview2pdf
-except ImportError:
-    sys.path.append(os.path.join("..", "informes"))
-    from treeview2pdf import treeview2pdf
-try:
-    from treeview2csv import treeview2csv
-except ImportError:
-    sys.path.append(os.path.join("..", "informes"))
-    from treeview2pdf import treeview2pdf
+import gtk, gtk.glade, mx, mx.DateTime
+from framework import pclases
+from formularios.ventana import Ventana
+from treeview2pdf import treeview2pdf
+from treeview2csv import treeview2csv
 from informes import abrir_pdf, abrir_csv
 
 class ProduccionPorEmpleado(Ventana):
-    VENTANA = os.path.join("..", "ui", "produccion_por_empleado.glade")
+    VENTANA = os.path.join("ui", "produccion_por_empleado.glade")
     def __init__(self, objeto = None, usuario = None):
         """
         Constructor. objeto puede ser un objeto de pclases con el que

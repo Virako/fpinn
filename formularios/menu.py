@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -62,12 +63,9 @@ os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
 #print os.getcwd()
 #print os.path.realpath(sys.argv[0])
 
-import utils
+from formularios import utils
 import mx, mx.DateTime
-path_framework = os.path.join("..", "framework")
-if path_framework not in sys.path:
-    sys.path.append(path_framework)
-from configuracion import ConfigConexion
+from framework.configuracion import ConfigConexion
 
 _VERSION = '1.9'
 
@@ -109,11 +107,7 @@ def import_pclases():
     # Importo pclases. No lo hago directamente en la cabecera 
     # para esperar a ver si se ha pasado al main un fichero de 
     # configuración diferente.
-    try:
-        import pclases
-    except ImportError:
-        sys.path.insert(0, os.path.join('..', 'framework'))
-        import pclases
+    from framework import pclases
     ############################################################
     return pclases
 
@@ -218,7 +212,7 @@ class Menu:
         self.ventana.set_position(gtk.WIN_POS_CENTER)
         self.ventana.resize(800, 600)
         self.ventana.set_title('Menú principal')
-        ruta_logo = os.path.join("..", "imagenes", 'logo.xpm')
+        ruta_logo = os.path.join("imagenes", 'logo.xpm')
         self.ventana.set_icon(gtk.gdk.pixbuf_new_from_file(ruta_logo))
         self.ventana.set_border_width(10)
         self.ventana.connect("delete_event", self.salir, True, self.ventana)
@@ -229,7 +223,7 @@ class Menu:
         imagen = gtk.Image()
         config = ConfigConexion()
         pixbuf_logo = gtk.gdk.pixbuf_new_from_file(
-            os.path.join('..', 'imagenes', config.get_logo()))
+            os.path.join('imagenes', config.get_logo()))
         pixbuf_logo = escalar_a(300, 200, pixbuf_logo)
         imagen.set_from_pixbuf(pixbuf_logo)
         self.cabecera.pack_start(imagen, fill=True, expand=False)
@@ -270,11 +264,11 @@ class Menu:
         model = gtk.ListStore(str, gtk.gdk.Pixbuf)
         for modulo in [m for m in pclases.Modulo.select(orderBy = "nombre") \
                        if len([p.ventana for p in self.get_usuario().permisos if p.permiso and p.ventana.modulo == m]) > 0]: 
-            pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', modulo.icono))
+            pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', modulo.icono))
             model.append([modulo.nombre, pixbuf])
         # XXX: Módulo favoritos
         # CWT: No quiere favoritos. :(
-        #pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', "favoritos.png"))
+        #pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', "favoritos.png"))
         #model.append(("Favoritos", pixbuf))
         # XXX:
         
@@ -389,9 +383,9 @@ class Menu:
                                          (s1.descripcion<s2.descripcion and -1) or 0)
         for ventana in ventanas:
             try:
-                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', ventana.icono))
+                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', ventana.icono))
             except (gobject.GError, AttributeError, TypeError):  # Icono es "" o None (NULL en la tabla).
-                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', 'dorsia.png'))
+                pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', 'dorsia.png'))
             model.append((self.cutmaister(ventana.descripcion), pixbuf, ventana.fichero, ventana.clase))
             # El model tiene: nombre (descripción), icono, archivo, clase, descripción detallada (hint)
             # NOTA: No se pueden mostrar hints en el IconView (al menos yo no sé cómo), así que ahora 
@@ -538,9 +532,9 @@ class Menu:
         vacerca.set_comments('Software de gestión para FresParaíso')
         vacerca.set_authors(['Francisco José Rodríguez Bogado <rodriguez.bogado@gmail.com>', 'Diego Muñoz Escalante <escalant3@gmail.com>'])
         config = ConfigConexion()
-        logo = gtk.gdk.pixbuf_new_from_file(os.path.join('..', 'imagenes', config.get_logo()))
+        logo = gtk.gdk.pixbuf_new_from_file(os.path.join('imagenes', config.get_logo()))
         vacerca.set_logo(logo)
-        vacerca.set_license(open(os.path.join('..', 'gpl.txt')).read())
+        vacerca.set_license(open(os.path.join('gpl.txt')).read())
         vacerca.set_website('http://fpinn.sf.net')
         vacerca.set_artists(['Iconos gartoon por Kuswanto (a.k.a. Zeus) <zeussama@gmail.com>'])
         vacerca.set_copyright('Copyright 2005-2008  Francisco José Rodríguez Bogado.')
@@ -553,7 +547,7 @@ def construir_y_enviar(w, ventana, remitente, observaciones, texto, usuario):
     try:
         import libgmail
     except:
-        sys.path.insert(0, os.path.join('..', 'libgmail-0.1.3.3'))
+        sys.path.insert(0, os.path.join('libgmail-0.1.3.3'))
         import libgmail
     rte = remitente.get_text()
     buffer = observaciones.get_buffer()
@@ -684,7 +678,7 @@ def crear_ventana(titulo, texto, usuario):
     ventana.set_position(gtk.WIN_POS_CENTER_ALWAYS)
     tabla = gtk.Table(5, 2)
     imagen = gtk.Image()
-    imagen.set_from_file(os.path.join('..', 'imagenes', 'emblem-mail.png'))
+    imagen.set_from_file(os.path.join('imagenes', 'emblem-mail.png'))
     info = gtk.Label('Se produjo un error mientras usaba la aplicación\nEs recomendable enviar un informe a los desarrolladores.\nDebe contar con una cuenta de correo gmail para poder hacerlo.')
     tabla.attach(imagen, 0, 1, 0, 1, xpadding = 5, ypadding = 5)
     tabla.attach(info, 1, 2, 0, 1, xpadding = 5, ypadding = 5)
@@ -706,7 +700,7 @@ def crear_ventana(titulo, texto, usuario):
 
 
 def enviar_correo(texto, usuario = None):
-    import sys, os
+    import os
     ventana, boton, remitente, observaciones = crear_ventana('ENVIAR INFORME DE ERROR', texto, usuario)
     ventana.connect('destroy', gtk.main_quit)
     boton.connect('clicked', construir_y_enviar, ventana, remitente, observaciones, texto, usuario)
@@ -758,81 +752,3 @@ def escalar_a(ancho, alto, pixbuf):
                      gtk.gdk.INTERP_BILINEAR)
         pixbuf = pixbuf2
     return pixbuf
-
-def main():
-    # Si hay ficheros de estilo gtk, los cargo por orden: General de la 
-    # aplicación y específico del usuario en WIN y UNIX. Se machacan opciones 
-    # de por ese orden.
-    GTKRC = "gtkrc"
-    gtk.rc_parse(os.path.join("..", GTKRC))
-    if "HOME" in os.environ:
-        gtk.rc_parse(os.path.join(os.environ["HOME"], GTKRC))
-    if "HOMEPATH" in os.environ:
-        gtk.rc_parse(os.path.join(os.environ["HOMEPATH"], GTKRC))
-    # Ver http://www.pygtk.org/docs/pygtk/class-gtkrcstyle.html para la 
-    # referencia de estilos. Ejemplo: 
-    # bogado@cpus006:~/Geotexan/geotexinn02/formularios$ cat ../gtkrc 
-    # style 'blanco_y_negro' { bg[NORMAL] = '#FFFFFF'
-    #                          fg[NORMAL] = '#000000' 
-    #                          base[NORMAL] = '#FFFFFF' 
-    #                          text[NORMAL] = '#000000' 
-    #                        }
-    # class '*' style 'blanco_y_negro'
-    ##
-    fconfig = None
-    user = None
-    passwd = None
-    if len(sys.argv) > 1:
-        from optparse import OptionParser
-        usage = "uso: %prog [opciones] usuario contraseña"
-        parser = OptionParser(usage = usage)
-        parser.add_option("-c", "--config", 
-                          dest = "fichconfig", 
-                          help = "Usa una configuración alternativa "
-                                 "almacenada en FICHERO", 
-                          metavar="FICHERO")
-        (options, args) = parser.parse_args()
-        fconfig = options.fichconfig
-        if len(args) >= 1:
-            user = args[0]
-        if len(args) >= 2:
-            passwd = args[1]
-        # HACK
-        if fconfig:
-            config = ConfigConexion()
-            config.set_file(fconfig)
-        # Lo hago así porque en todos sitios se llama al constructor sin 
-        # parámetros, y quiero instanciar al singleton por primera vez aquí. 
-        # Después pongo la configuración correcta en el archivo y en sucesivas 
-        # llamadas al constructor va a devolver el objeto que acabo de crear y 
-        # con la configuración que le acabo de asignar. En caso de no recibir 
-        # fichero de configuración, la siguiente llamada al constructor será 
-        # la que cree el objeto y establezca la configuración del programa. 
-        # OJO: Dos llamadas al constructor con parámetros diferentes crean 
-        # objetos diferentes.
-    #salida = MetaF()
-    #sys.stdout = salida
-    errores = MetaF()
-    sys.stderr = errores
-
-    m = Menu(user, passwd)
-    m.mostrar()
-
-    if not errores.vacio():
-        print "Se han detectado algunos errores en segundo plano durante la ejecución."
-        enviar_correo('Errores en segundo plano. La stderr contiene:\n%s' 
-                        % (errores), 
-                      m.get_usuario())
-
-
-if __name__ == '__main__':
-    # Import Psyco if available
-    try:
-        import psyco
-        psyco.full()
-        #psyco.log()
-        #psyco.profile()
-    except ImportError:
-        print "Optimizaciones no disponibles."
-    main()
-

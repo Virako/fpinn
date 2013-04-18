@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 #                          (pacoqueen@users.sourceforge.net)                  #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -27,14 +28,12 @@
 Módulo de adquisición de producciones.
 """
 
-import sys, os
-import pclases
-try:
-    import utils
-except ImportErorr:
-    sys.path.append(os.path.join("..", "formularios"))
 import mx, mx.DateTime
 import md5
+import sys
+from framework import pclases
+from formularios import utils
+
 
 def procesar(data_recibido):
     """
@@ -97,7 +96,6 @@ def build_jornal(data = None, intentos = 5):
         except ValueError:
             data = None
     if data != None:    # Los ha procesado correctamente.
-        import pclases
         empleado = pclases.Empleado.get(ide)
         actividad = pclases.Actividad.get(ida)
         parcela = pclases.Parcela.get(idp)

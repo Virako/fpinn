@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 #                          (pacoqueen@users.sourceforge.net                   #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -34,17 +35,13 @@
 ## 
 ###################################################################
 
-import sys, os
-import utils
+import os
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
 import gtk, gtk.glade, time, mx, mx.DateTime
-try:
-    import pclases
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-from ventana import Ventana
+from framework import pclases
+from formularios.ventana import Ventana
 try:
     from pychart import *
 except ImportError:
@@ -55,7 +52,7 @@ from tempfile import gettempdir
 
 
 class EmpleadosProduccion(Ventana):
-    VENTANA = os.path.join("..", "ui", "empleados_produccion.glade")
+    VENTANA = os.path.join("ui", "empleados_produccion.glade")
     def __init__(self, objeto = None, usuario = None):
         """
         Constructor. objeto puede ser un objeto de pclases con el que
@@ -294,12 +291,12 @@ def generar_grafica(empleado):
     try:
         ar.draw()
     except ValueError:  # data está vacío, fijo
-        nombregraph = os.path.join("..", "imagenes", "bars.png")
+        nombregraph = os.path.join("imagenes", "bars.png")
 
     try:
         can.close()
     except: 
-        nombregraph = os.path.join("..", "imagenes", "bars.png")
+        nombregraph = os.path.join("imagenes", "bars.png")
     return nombregraph
 
 

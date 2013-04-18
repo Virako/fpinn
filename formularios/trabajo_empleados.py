@@ -27,8 +27,8 @@
 ###############################################################################
 
 import os
-from ventana import Ventana
-import utils
+from formularios.ventana import Ventana
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -44,8 +44,8 @@ class TrabajoEmpleados(Ventana):
         el que se muestra por defecto).
         """
         self.usuario = usuario
-        Ventana.__init__(self, os.path.join("..", "ui",
-                'trabajo_empleados.glade'), objeto)
+        Ventana.__init__(self, os.path.join("ui", 'trabajo_empleados.glade'),
+               objeto)
         connections = {'b_borrar/clicked': self.borrar_jornada,
                        'b_modificar/clicked': self.modificar_jornada,
                        'b_anticipo/clicked': self.dar_anticipo,

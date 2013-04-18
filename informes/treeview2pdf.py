@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008 Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -23,21 +24,11 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA  #
 ###############################################################################
 
-import sys, os
+import os
 import geninformes
-try:
-    import utils
-    from trazabilidad import Trazabilidad
-except ImportError:
-    sys.path.append(os.path.join('..', 'formularios'))
-    import utils
-    from trazabilidad import Trazabilidad
+from formularios import utils
 import mx, mx.DateTime
-try:
-    import pclases
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
+from framework import pclases
 from informes import abrir_pdf
 from tempfile import gettempdir
 

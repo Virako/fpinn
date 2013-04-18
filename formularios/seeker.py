@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005, 2006 Francisco José Rodríguez Bogado.                   #
 #                          (pacoqueen@users.sourceforge.net)                  #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -55,12 +56,11 @@ I won't get to get what I'm after
 import pygtk
 pygtk.require('2.0')
 import gtk, gtk.glade
-import sys, os
-sys.path.append(os.path.join("..", "framework"))
-import pclases
+import os
+from framework import pclases
 
 import utils, mx
-from ventana import Ventana
+from formularios.ventana import Ventana
 
 class Resultado:
     """
@@ -249,7 +249,7 @@ class VentanaGenerica(Ventana):
         self.usuario = usuario
         self.clase = clase
         self.objeto = objeto
-        ventana_marco = os.path.join('..', 'ui', 'ventana_generica.glade')
+        ventana_marco = os.path.join('ui', 'ventana_generica.glade')
         Ventana.__init__(self, ventana_marco, objeto, usuario)
         # Botones genéricos:
         connections = {'b_salir/clicked': self.salir, 

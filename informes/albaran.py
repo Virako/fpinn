@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2008 Francisco José Rodríguez Bogado,                    #
 #                         (pacoqueen@users.sourceforge.net)                   #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of FPINN.                                                 #
 #                                                                             #
@@ -22,31 +23,12 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA  #
 ###############################################################################
 
-import reportlab
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
-import mx, mx.DateTime
-
-import sys, os
-try:
-    import pclases
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-try:
-    import utils
-except ImportError:
-    sys.path.append(os.path.join('..', 'formularios'))
-    import utils
-try:
-    import geninformes 
-except ImportError:
-    try:
-        sys.path.append(os.path.insert(0, '.'))
-        import geninformes
-    except ImportError:
-        sys.path.append(os.path.join('..', 'informes'))
-        import geninformes
+import os
+from framework import pclases
+from formularios import utils
+from informes import geninformes 
 from tempfile import gettempdir
 
 
@@ -216,7 +198,7 @@ def dibujar_imprenta(c, hlin, tm, bm, lm, rm, tampag, medidas, fuente,
     c.setFillColorRGB(0, .5, 0)
     c.setStrokeColorRGB(0, .5, 0)
     print_datos_empresa(c, dde, tm, lm, tampag)
-    print_logo(c, os.path.join("..", "imagenes", dde.logo), tampag)
+    print_logo(c, os.path.join("imagenes", dde.logo), tampag)
     print_cabecera(c, tampag, rm, medidas, fuente, tamanno)
     print_tabla(c, hlin, tampag, rm, maxlineas, medidas_tabla)
     print_firmas(c, tampag, fuente, tamanno)
@@ -431,7 +413,6 @@ def go_from_albaranSalida(albaran, solo_texto = False):
               matricula, ldvs, total, solo_texto)
 
 def prueba_albaran():
-    sys.path.append("../formularios")
     from informes import abrir_pdf
     abrir_pdf(go_from_albaranSalida(pclases.AlbaranSalida.select()[0]))
     import time

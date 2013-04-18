@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 #                          (pacoqueen@users.sourceforge.net                   #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -29,27 +30,21 @@
 ##  
 ###################################################################
 
-import sys, os
-from ventana import Ventana
-import utils
+import os
+from formularios.ventana import Ventana
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
-import gtk, gtk.glade, time, mx, mx.DateTime
-try:
-    import pclases
-    from seeker import VentanaGenerica 
-except ImportError:
-    sys.path.append(os.path.join('..', 'framework'))
-    import pclases
-    from seeker import VentanaGenerica 
-from utils import _float as float
-import adapter
+import gtk, gtk.glade, mx, mx.DateTime
+from framework import pclases
+from framework import adapter
+from formularios.seeker import VentanaGenerica
 
 DEBUG = False
 
 class FacturasVenta(Ventana, VentanaGenerica):
     CLASE = pclases.FacturaVenta
-    VENTANA = os.path.join("..", "ui", "facturas_venta.glade")
+    VENTANA = os.path.join("ui", "facturas_venta.glade")
     def __init__(self, objeto = None, usuario = None):
         """
         Constructor. objeto puede ser un objeto de pclases con el que
@@ -990,7 +985,7 @@ class FacturasVenta(Ventana, VentanaGenerica):
                 import factura
                 from informes import abrir_pdf
             except ImportError:
-                sys.path.append(os.path.join("..", "informes"))
+                sys.path.append(os.path.join("informes"))
                 import factura
                 from informes import abrir_pdf
             fpdf = factura.go_from_facturaVenta(self.objeto, solo_texto = r)

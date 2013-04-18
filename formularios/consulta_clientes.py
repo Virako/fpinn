@@ -4,6 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2008  Francisco José Rodríguez Bogado,                   #
 #                          (pacoqueen@users.sourceforge.net)                  #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of fpinn.                                                 #
 #                                                                             #
@@ -31,22 +32,18 @@
 ###################################################################
 
 import os
-from ventana import Ventana
-import utils
+from formularios.ventana import Ventana
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
 import gtk, gtk.glade, time, sqlobject
 import sys
-try:
-    import pclases
-except ImportError:
-    from os.path import join as pathjoin; sys.path.append(pathjoin("..", "framework"))
-    import pclases
+from framework import pclases
 import mx, mx.DateTime
 sys.path.append('.')
 import ventana_progreso
 import re
-from utils import _float as float
+from formularios.utils import _float as float
 
 class ConsultaClientes(Ventana):
     inicio = None
@@ -60,7 +57,7 @@ class ConsultaClientes(Ventana):
         el que se muestra por defecto).
         """
         global fin
-        Ventana.__init__(self, os.path.join("..", "ui", 
+        Ventana.__init__(self, os.path.join("ui", 
             'consulta_clientes.glade'), objeto)
         connections = {'b_salir/clicked': self.salir,
                        'b_buscar/clicked': self.buscar,
@@ -100,8 +97,8 @@ class ConsultaClientes(Ventana):
         """
         Exporta el contenido del TreeView a un fichero csv.
         """
-        import sys, os
-        sys.path.append(os.path.join("..", "informes"))
+        import os
+        sys.path.append(os.path.join("informes"))
         from treeview2csv import treeview2csv
         from informes import abrir_csv
         tv = self.wids['tv_datos']
@@ -218,8 +215,8 @@ class ConsultaClientes(Ventana):
         """
         Prepara la vista preliminar para la impresión del informe
         """
-        import sys, os
-        sys.path.append(os.path.join("..", "informes"))
+        import os
+        sys.path.append(os.path.join("informes"))
         from treeview2pdf import treeview2pdf
         from informes import abrir_pdf
         if self.inicio == None:

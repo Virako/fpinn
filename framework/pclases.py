@@ -5,6 +5,7 @@
 # Copyright (C) 2005, 2006 Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -67,29 +68,22 @@ except AttributeError:  # __doc__ es None. ¿Versión demasiado antigua?
 sqlobject_autoid = lambda: sqlobject_version > "SQLObject 0.10.4"
 # 14/01/2011: Cambio IVA de 16 al 18. 
 
-import sys, os
+import os
+import threading
 from sqlobject import *
 from math import ceil
-try:
-    import notificacion
-except:
-    sys.path.append(os.path.join('..', 'formularios'))
-    try:
-        import notificacion
-    except:
-        sys.path.append('.')
-        import notificacion
-  
-import threading
 from select import select
-
-from configuracion import ConfigConexion
-
 import mx, mx.DateTime, datetime
 
-from utils import parse_fecha, str_fecha, str_fechahora, _float, float2str, comparar_fechas
+from framework.configuracion import ConfigConexion
+from formularios import notificacion
+from formularios.utils import parse_fecha
+from formularios.utils import str_fecha
+from formularios.utils import str_fechahora
+from formularios.utils import _float
+from formularios.utils import float2str
+from formularios.utils import comparar_fechas
 
-from math import ceil
 
 # GET FUN !
 
@@ -366,7 +360,7 @@ class ImagenPlano:
         # Normalmente formularios o framework.
         # Por tanto lo primero que hago es salir del subdirectorio para 
         # buscar el de documentos adjuntos.
-        RUTA_BASE = os.path.join("..", config.get_dir_compartido())
+        RUTA_BASE = os.path.join(config.get_dir_compartido())
         try:
             assert os.path.exists(RUTA_BASE)
         except AssertionError:
@@ -383,7 +377,7 @@ class ImagenPlano:
         """
         if self.rutaPlano:
             return os.path.join(ImagenPlano.get_ruta_base(), self.rutaPlano)
-        return os.path.join("..", "imagenes", "map.png")
+        return os.path.join("imagenes", "map.png")
 
     def copiar_a_dircompartido(ruta):
         """
@@ -700,12 +694,13 @@ class Empleado(SQLObject, PRPCTOO):
         Si maximo != None reescala la imagen para que ninguna de sus dos 
         dimensiones supere esa cantidad
         """
-        import gtk, utils
+        import gtk
+        from formularios import utils
         if self.imagenes:
             impil = self.imagenes[0].to_pil()
         else:
             from PIL import Image
-            impil = Image.open(os.path.join("..", "imagenes", "users.png"))
+            impil = Image.open(os.path.join("imagenes", "users.png"))
         ancho, alto = impil.size
         escala = (float(maximo) / max(ancho, alto))
         impil = impil.resize((int(ancho * escala), 
@@ -740,7 +735,7 @@ class Empleado(SQLObject, PRPCTOO):
         horas).
         OJO: Solo tiene en cuenta las "fechahoras" de inicio.
         """
-        from utils import unificar
+        from formularios.utils import unificar
         jornales = Jornal.select(Jornal.q.empleadoID == self.id)
         prodtotal = sum([j.produccion for j in jornales])
         dias = [(j.fechahoraInicio.day, 
@@ -1142,7 +1137,7 @@ class Documento(SQLObject, PRPCTOO):
         # Normalmente formularios o framework.
         # Por tanto lo primero que hago es salir del subdirectorio para 
         # buscar el de documentos adjuntos.
-        RUTA_BASE = os.path.join("..", config.get_dir_adjuntos())
+        RUTA_BASE = os.path.join(config.get_dir_adjuntos())
         try:
             assert os.path.exists(RUTA_BASE)
         except AssertionError:
@@ -1309,12 +1304,12 @@ class Jornal(SQLObject, PRPCTOO):
         """
         Devuelve la media de producción de los empleados en la fecha recibida.
         """
-        from utils import unificar
+        from formularios.utils import unificar
         J = Jornal
         try:
             fecha_sig = fecha + mx.DateTime.oneDay
         except TypeError:
-            from utils import parse_fecha, str_fecha
+            from formularios.utils import parse_fecha, str_fecha
             fecha_sig = (parse_fecha(str_fecha(fecha)) 
                          + mx.DateTime.oneDay)
         jornales = J.select(AND(J.q.fechahoraInicio >= fecha, 
@@ -1337,7 +1332,7 @@ class Jornal(SQLObject, PRPCTOO):
         Si fechainicio != None, cuenta a partir de ese día únicamente.
         OJO: Solo tiene en cuenta la fechahoraInicio para obtener el día.
         """
-        from utils import unificar
+        from formularios.utils import unificar
         if fechainicio and not fechafin:
             jornales = Jornal.select(Jornal.q.fechahoraInicio >= fechainicio)
         elif fechainicio and fechafin:
@@ -2074,7 +2069,7 @@ class AlbaranSalida(SQLObject, PRPCTOO):
         if not fras:
             return self.PENDIENTE_FACTURAR
         else:
-            from utils import unificar
+            from formularios.utils import unificar
             fras = unificar(fras)
             totalpdte = sum(
                 [FacturaVenta.get(f).calcular_pendiente_cobro() 
@@ -2128,7 +2123,7 @@ class AlbaranSalida(SQLObject, PRPCTOO):
                     self.cliente and self.cliente.nombre or "Sin cliente")
 
     def get_str_fecha(self):
-        from utils import str_fecha
+        from formularios.utils import str_fecha
         return str_fecha(self.fecha)
 
 class FacturaVenta(SQLObject, PRPCTOO):
@@ -2260,7 +2255,7 @@ class FacturaVenta(SQLObject, PRPCTOO):
         Si forzar = True asegura que crea al menos un vencimiento aunque el 
         cliente no los tenga definidos: efectivo y a 0 D.F.F.
         """
-        from utils import cmp_mxDateTime
+        from formularios.utils import cmp_mxDateTime
         factura = self
         cliente = factura.cliente
         vtos_creados = []

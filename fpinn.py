@@ -1,8 +1,8 @@
-#! /usr/bin/python
-# -*- coding:utf-8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 ###############################################################################
-# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
+# Copyright (C) 2013    Victor Ramirez de la Corte, (virako.9@gmail.com)      #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -21,50 +21,49 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA  #
 ###############################################################################
 
-import sane
+
+import pygtk
+pygtk.require('2.0')
+import sys
+from optparse import OptionParser
+
+from framework.configuracion import ConfigConexion
+from formularios.menu import MetaF
+from formularios.menu import Menu
+from formularios.menu import enviar_correo
 
 
-def select_scan():
-    sane.init()
-    devices = sane.get_devices()
+def main():
+    user = None
+    passwd = None
+    if len(sys.argv) > 1:
+        usage = "uso: %prog [opciones] usuario contraseña"
+        parser = OptionParser(usage=usage)
+        parser.add_option("-c", "--config", dest="fichconfig",
+                help="Usa la configuración alternativa almacenada en FICHERO",
+                metavar="FICHERO")
+        (options, args) = parser.parse_args()
+        fconfig = options.fichconfig
+        if len(args) >= 1:
+            user = args[0]
+        if len(args) >= 2:
+            passwd = args[1]
+        # HACK
+        if fconfig:
+            config = ConfigConexion()
+            config.set_file(fconfig)
 
-    if not len(devices):
-        print "No existen dispositivos. "
-        return 0
-    elif len(devices) > 1:
-        print "Seleccione el dispositivo deseado: " # TODO
-        n = -1
-        while n != -1:
-            num = 0
-            for d in devices:
-                print num, ": ", d
-                num += 1
-            try:
-                n = int(raw_input("Seleccione dispositivo para usar: "))
-            except:
-                n = -1
-        return devices[n][0]
-    elif len(devices) == 1:
-        return devices[0][0]
+    errores = MetaF()
+    sys.stderr = errores
+
+    m = Menu(user, passwd)
+    m.mostrar()
+
+    if not errores.vacio():
+        print "Detectado errores en segundo plano durante la ejecución."
+        enviar_correo('Errores en segundo plano. La stderr contiene:\n%s'
+                % (errores), m.get_usuario())
 
 
-def scan(factura=None, cmr=None):
-    print "scan"
-    if factura:
-        factura = factura.replace("/", "_")
-        filename = "factura/%s.pdf" % (factura)
-    if cmr:
-        filename = "cmr/%s.pdf" % (cmr)
-    if not filename:
-        return -1
-
-    sel_scan = select_scan()
-    if not sel_scan:
-        return -1
-    scan = sane.open(sel_scan)
-    scan.mode = 'color'
-    scan.resolution = 150
-    print "scannn"
-    img = scan.scan()
-    img.save(filename)
-    return 1
+if __name__ == '__main__':
+    main()

@@ -5,6 +5,7 @@
 # Copyright (C) 2005-2008  Francisco José Rodríguez Bogado,                   #
 #                          Diego Muñoz Escalante.                             #
 # (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
@@ -36,18 +37,13 @@
 ##
 ###################################################################
 
-from ventana import Ventana
-import utils
+from formularios.ventana import Ventana
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
 import gtk, gtk.glade, time, sqlobject
-try:
-    import pclases
-except ImportError:
-    import sys
-    from os.path import join as pathjoin; sys.path.append(pathjoin("..", "framework"))
-    import pclases
-import sys, os
+from framework import pclases
+import os
 try:
     from hashlib import md5
 except ImportError:
@@ -87,7 +83,7 @@ class Autenticacion(Ventana):
         """
         Constructor.
         """
-        Ventana.__init__(self, 'autenticacion.glade', None)
+        Ventana.__init__(self, 'ui/autenticacion.glade', None)
         connections = {'b_aceptar/clicked': self.login_from_ventana,
                        'e_usuario/activate': self.pasar_a_pass,
                        'e_passwd/activate': self.login_from_ventana,
@@ -96,7 +92,7 @@ class Autenticacion(Ventana):
         self.add_connections(connections)
         self.wids['e_usuario'].grab_focus()
         self.wids['image1'].set_from_file(
-            os.path.join('..', 'imagenes', 'llave.png'))
+            os.path.join('imagenes', 'llave.png'))
         self.contador = 0   # Contador de intentos fallidos
         self.__success = False
         self.__usuario = None
@@ -127,7 +123,7 @@ class Autenticacion(Ventana):
         self.wids['label1'].set_text(
             'ERROR:\nUsuario o contraseña incorrectos.')
         self.wids['image1'].set_from_file(
-            os.path.join('..', 'imagenes', 'error.png'))
+            os.path.join('imagenes', 'error.png'))
         self.logger.warning('Acceso erróneo. Usuario: %s. IP: %s', 
                             self.wids['e_usuario'].get_text(), get_IPLocal())
         while gtk.events_pending():
@@ -140,7 +136,7 @@ class Autenticacion(Ventana):
         self.wids['e_passwd'].set_text('')
         self.wids['e_passwd'].grab_focus()
         self.wids['image1'].set_from_file(
-            os.path.join('..', 'imagenes', 'llave.png'))
+            os.path.join('imagenes', 'llave.png'))
         self.wids['label1'].set_text(txt)
 
     def pasar_a_pass(self, e):

@@ -17,17 +17,12 @@
 ## 
 ###################################################################
 
-from ventana import Ventana
-import utils
+from formularios.ventana import Ventana
+from formularios import utils
 import pygtk
 pygtk.require('2.0')
 import gtk, gtk.glade, time
-try:
-    import pclases
-except ImportError:
-    import sys
-    from os.path import join as pathjoin; sys.path.append(pathjoin("..", "framework"))
-    import pclases
+from framework import pclases
 import mx
 import mx.DateTime
 import os 
@@ -42,7 +37,7 @@ class Trazabilidad(Ventana):
         try:
             Ventana.__init__(self, 'trazabilidad.glade', objeto)
         except:     # Tal vez me estén llamando desde otro directorio
-            Ventana.__init__(self, os.path.join('..', 'formularios', 'trazabilidad.glade'), objeto)
+            Ventana.__init__(self, os.path.join('formularios', 'trazabilidad.glade'), objeto)
         connections = {'b_salir/clicked': self.salir,
                        'b_buscar/clicked': self.buscar}
         self.add_connections(connections)
@@ -60,8 +55,8 @@ class Trazabilidad(Ventana):
             vars_locales[k] = locals_adicionales[k] 
         consola = pyconsole.attach_console(self.wids['contenedor_consola'], 
                                            banner = "Consola python de depuración GINN", 
-                                           script_inicio = """import sys, os, pygtk, gtk, gtk.glade, utils
-sys.path.append(os.path.join("..", "framework"))
+                                           script_inicio = """import os, pygtk, gtk, gtk.glade, utils
+sys.path.append(os.path.join("framework"))
 import pclases, mx, mx.DateTime
 from seeker import VentanaGenerica as Ver
 dir()
@@ -341,6 +336,7 @@ dir()
 ## Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 ##                          Diego Muñoz Escalante.                             #
 ## (pacoqueen@users.sourceforge.net, escalant3@users.sourceforge.net)          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
 ##                                                                             #
 ## This file is part of F.P.-INN .                                             #
 ##                                                                             #
