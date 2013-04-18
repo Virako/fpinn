@@ -57,7 +57,7 @@ Line 34 and 35.
 
 ### Execute
 
-    $ python formularios/menu.py
+    $ python fpinn.py
 
 ## Some errors
 
