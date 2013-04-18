@@ -6,7 +6,7 @@ Software to manage the production of FresParaiso
 ## Requirements
 
 For install fpinn, you need install python-glade2 python-sqlobject python-psycopg2:
-    sudo apt-get install python-glade2 python-sqlobject python-psycopg2
+    sudo apt-get install python-glade2 python-sqlobject python-psycopg2 python-imaging-sane
 
 ## Configure
 
