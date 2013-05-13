@@ -57,6 +57,15 @@ CREATE TABLE empleado(
     precio_hora_manipulacion FLOAT DEFAULT 0.0
 );
 
+CREATE TABLE trabajo(
+    empleado_id INT REFERENCES empleado,
+    fecha DATE DEFAULT CURRENT_DATE,
+    jornada BOOLEAN DEFAULT FALSE,
+    horas_campo FLOAT DEFAULT 0.0,
+    horas_manipulacion FLOAT DEFAULT 0.0,
+    PRIMARY KEY (empleado_id, fecha)
+);
+
 -------------
 -- Campaña --
 -------------
