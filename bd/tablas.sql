@@ -58,12 +58,12 @@ CREATE TABLE empleado(
 );
 
 CREATE TABLE trabajo(
+    id SERIAL PRIMARY KEY,
     empleado_id INT REFERENCES empleado,
     fecha DATE DEFAULT CURRENT_DATE,
     jornada BOOLEAN DEFAULT FALSE,
     horas_campo FLOAT DEFAULT 0.0,
-    horas_manipulacion FLOAT DEFAULT 0.0,
-    PRIMARY KEY (empleado_id, fecha)
+    horas_manipulacion FLOAT DEFAULT 0.0
 );
 
 -------------

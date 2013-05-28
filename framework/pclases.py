@@ -669,6 +669,7 @@ class Empleado(SQLObject, PRPCTOO):
     documentos = MultipleJoin('Documento')
     jornales = MultipleJoin("Jornal")
     salarios = MultipleJoin("Salario")
+    trabajos = MultipleJoin("Trabajo")
 
     def calcular_edad(self, fecha = mx.DateTime.localtime()):
         """
@@ -779,6 +780,21 @@ class Empleado(SQLObject, PRPCTOO):
             else:
                 res[dia] += j.produccion
         return res
+
+    def get_trabajo_mes(self, f1=None, f2=None):
+        return Trabajo.select(AND(Trabajo.q.empleadoID == self.id,
+                Trabajo.q.fecha >= f1, Trabajo.q.fecha < f2))
+
+
+class Trabajo(SQLObject, PRPCTOO):
+    # XXX: Común a todas las clases que heredan de SQLObject.
+    _connection = conn
+    sqlmeta.fromDatabase = True
+
+    def _init(self, *args, **kw):
+        starter(self, *args, **kw)
+    # XXX: --------------------------------------------------
+
 
 class Envase(SQLObject, PRPCTOO):
     # XXX: Común a todas las clases que heredan de SQLObject.

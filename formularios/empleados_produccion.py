@@ -135,7 +135,7 @@ class EmpleadosProduccion(Ventana):
 
     def es_diferente(self):
         return False
-    
+
     def activar_widgets(self, s, chequear_permisos = True):
         """
         Activa o desactiva (sensitive=True/False) todos 

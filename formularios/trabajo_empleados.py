@@ -27,12 +27,14 @@
 ###############################################################################
 
 import os
-from formularios.ventana import Ventana
-from formularios import utils
 import pygtk
 pygtk.require('2.0')
 import gtk
 import gtk.glade
+
+from framework import pclases
+from formularios.ventana import Ventana
+from formularios import utils
 
 
 class TrabajoEmpleados(Ventana):
@@ -44,22 +46,34 @@ class TrabajoEmpleados(Ventana):
         el que se muestra por defecto).
         """
         self.usuario = usuario
+        self.clase = pclases.Trabajo
         Ventana.__init__(self, os.path.join("ui", 'trabajo_empleados.glade'),
                objeto)
         connections = {'b_borrar/clicked': self.borrar_jornada,
-                       'b_modificar/clicked': self.modificar_jornada,
-                       'b_anticipo/clicked': self.dar_anticipo,
-                       'b_save/clicked': self.guardar_jornada,
-                       'b_quitar_seleccion/clicked': self.quitar_seleccion,
-                       'b_imprimir/clicked': self.imprimir,
-                       'rb_vista_diaria/clicked': self.rellenar_tabla_diaria,
-                       'rb_vista_mensual/clicked': self.rellenar_tabla_mensual,
-                       }
+                'b_modificar/clicked': self.modificar_jornada,
+                'b_anticipo/clicked': self.dar_anticipo,
+                'b_save/clicked': self.guardar_jornada,
+                'b_quitar_seleccion/clicked': self.quitar_seleccion,
+                'b_imprimir/clicked': self.imprimir,
+                'mostrar_fecha/clicked': self.mostrar_calendario,
+                'rb_vista_diaria/clicked': self.rellenar_tabla_diaria,
+                'rb_vista_mensual/clicked': self.rellenar_tabla_mensual,
+                'entry_h_campo/changed': self.comprobar_numero_valido,
+                'entry_h_manipulacion/changed': self.comprobar_numero_valido,
+                'treeview_visual_diaria/cursor-changed': self.sel_empleado,
+                'treeview_visual_mensual/cursor-changed': self.sel_empleado,
+                'treeview_apuntar/cursor-changed': self.sel_empleado,
+                'combo_grupo/changed': self.filtrar_empleados,
+                'calendar/day-selected-double-click': self.sel_day_calendar}
+                # TODO cerrar el calendario a mano falla
         self.add_connections(connections)
+        self.update_fecha()
         utils.preparar_listview(self.wids['treeview_visual_mensual'],
                 self.get_cols_mensual())
         utils.preparar_listview(self.wids['treeview_visual_diaria'],
                 self.get_cols_diaria())
+        utils.preparar_listview(self.wids['treeview_apuntar'],
+                self.get_cols_apuntar())
         #col = self.wids['treeview_visual'].get_column(3)
         #for cell in col.get_cell_renderers():
         #    cell.set_property("xalign", 1.0)
@@ -67,6 +81,9 @@ class TrabajoEmpleados(Ventana):
         #for cell in col.get_cell_renderers():
         #    cell.set_property("xalign", 1.0)
         self.rellenar_tabla_diaria(self.wids['rb_vista_diaria'])
+        self.wids['combo_grupo'].set_active(0)
+        self.wids['entry_h_campo'].set_text("0")
+        self.wids['entry_h_manipulacion'].set_text("0")
         gtk.main()
 
     def get_cols_diaria(self):
@@ -77,57 +94,76 @@ class TrabajoEmpleados(Ventana):
                 ('M', 'gobject.TYPE_STRING', False, True, True, None),
                 ('id', 'gobject.TYPE_INT', False, True, True, None))
 
-    def get_cols_mensual(self):
-        return (('Empleado', 'gobject.TYPE_STRING', False, True, True, None),
+    def get_cols_mensual(self, days=31):
+        cols = []
+        cols_names = ('Empleado', 'Alias', 'SS', 'Nomina', 'Sobre', 'Anticipo',
+                'Total')
+        for col in cols_names:
+            cols.append((col, 'gobject.TYPE_STRING', False, True, True, None))
+        for d in xrange(1, days + 1):
+            cols.append(('J%d' % d, 'gobject.TYPE_BOOLEAN', False, True, True,
+                    None))
+            cols.append(('C%d' % d, 'gobject.TYPE_STRING', False, True, True,
+                    None))
+            cols.append(('M%d' % d, 'gobject.TYPE_STRING', False, True, True,
+                    None))
+        cols.append(('id', 'gobject.TYPE_INT', False, True, True, None))
+        return cols
+
+    def get_cols_apuntar(self):
+        return (('Sel', 'gobject.TYPE_BOOLEAN', True, True, False,
+                    self.change_sel),
+                ('Empleado', 'gobject.TYPE_STRING', False, True, True, None),
                 ('Alias', 'gobject.TYPE_STRING', False, True, True, None),
-                ('1', 'gobject.TYPE_BOOLEAN', False, True, True, None),
-                ('2', 'gobject.TYPE_BOOLEAN', False, True, True, None),
-                ('3', 'gobject.TYPE_BOOLEAN', False, True, True, None),
                 ('id', 'gobject.TYPE_INT', False, True, True, None))
 
+    def change_sel(self, cell, path):
+        model = self.wids['treeview_apuntar'].get_model()
+        model[path][0] = not cell.get_active()
+
+    def rellenar_empleados(self, cuadrilla=""):
+        """ Rellena el treeview con los empleados, filtrando por cuadrilla en
+        caso de seleccionarse.  """
+        model = self.wids['treeview_apuntar'].get_model()
+        model.clear()
+        for e in pclases.Empleado.select():
+            # correo_electronico utilizado para guardar el alias
+            # observaciones para guardar las cuadrillas
+            sel = True if e.observaciones.count(cuadrilla) else False
+            model.append((sel, e.nombre, e.correoElectronico, e.id))
+
     def rellenar_tabla(self, mode='diaria'):
-        " Rellena el model con los items de la consulta. """
+        """ Rellena el model con los items de la consulta. """
 
         if mode == 'diaria':
             model = self.wids['treeview_visual_diaria'].get_model()
             model.clear()
-            jornadas = []
-            jornadas.append(["Pepe", "carvo", True, str(5.0), str(3.0)])
-            jornadas.append(["Pepe", "carvo", True, str(5.0), str(3.0)])
-            jornadas.append(["Pedro", "tss", False, str(4.0), str(3.30)])
-            jornadas.append(["Vic", "Virako", True, str(2.15), str(4.45)])
-            jornadas.append(["Pepe", "carvo", True, str(5.0), str(3.0)])
-            jornadas.append(["Pedro", "tss", False, str(4.0), str(3.30)])
-            jornadas.append(["Vic", "Virako", True, str(2.15), str(4.45)])
-            jornadas.append(["Pepe", "carvo", True, str(5.0), str(3.0)])
-            jornadas.append(["Pedro", "tss", False, str(4.0), str(3.30)])
-            jornadas.append(["Vic", "Virako", True, str(2.15), str(4.45)])
-            jornadas.append(["Pepe", "carvo", True, str(5.0), str(3.0)])
-            jornadas.append(["Pedro", "tss", False, str(4.0), str(3.30)])
-            jornadas.append(["Vic", "Virako", True, str(2.15), str(4.45)])
-            jornadas.append(["Pepe", "carvo", True, str(5.0), str(3.0)])
-            jornadas.append(["Pedro", "tss", False, str(4.0), str(3.30)])
-            jornadas.append(["Vic", "Virako", True, str(2.15), str(4.45)])
-            jornadas.append(["Pepe", "carvo", True, str(5.0), str(3.0)])
-            jornadas.append(["Pedro", "tss", False, str(4.0), str(3.30)])
-            jornadas.append(["Vic", "Virako", True, str(2.15), str(4.45)])
-            jornadas.append(["Pepe", "carvo", True, str(5.0), str(3.0)])
-            jornadas.append(["Pedro", "tss", False, str(4.0), str(3.30)])
-
-            for jornada in jornadas:
-                model.append((jornada[0], jornada[1], jornada[2], jornada[3],
-                        jornada[4], 0))
+            fecha = "%04d-%02d-%02d" % (self.fecha[0], self.fecha[1],
+                    self.fecha[2])
+            for t in pclases.Trabajo.select(pclases.Trabajo.q.fecha == fecha):
+                model.append((t.empleado.nombre, t.empleado.correoElectronico,
+                        t.jornada, t.horasCampo, t.horasManipulacion,
+                        t.empleadoID))
             self.colorear(self.wids['treeview_visual_diaria'])
         elif mode == 'mensual':
             model = self.wids['treeview_visual_mensual'].get_model()
             model.clear()
-            jornadas = []
-            jornadas.append(["Pepe", "carvo", True, True, False])
-            jornadas.append(["Pedro", "tss", False, True, False])
-            jornadas.append(["Vic", "Virako", True, True, False])
-            for jornada in jornadas:
-                model.append((jornada[0], jornada[1], jornada[2], jornada[3],
-                        jornada[4], 0))
+
+            f_ini = "%04d-%02d-01" % (self.fecha[0], self.fecha[1])
+            if self.fecha[1] == 12:
+                f_fin = "%04d-01-01" % (self.fecha[0] + 1)
+            else:
+                f_fin = "%04d-%02d-01" % (self.fecha[0], self.fecha[1] + 1)
+            for e in pclases.Empleado.select():
+                fila = [e.nombre, e.correoElectronico, '0', '0', '0', '0',
+                        '0'] + [False, '-', '-'] * 31 + [e.id]
+                for trabajo in e.get_trabajo_mes(f1=f_ini, f2=f_fin):
+                    dia = int(trabajo.fecha.__str__()[-2:])
+                    pos = 7 + (dia - 1) * 3
+                    fila[pos] = trabajo.jornada
+                    fila[pos + 1] = trabajo.horasCampo
+                    fila[pos + 2] = trabajo.horasManipulacion
+                model.append(fila)
             self.colorear(self.wids['treeview_visual_mensual'])
         else:
             print 'Error inesperado'
@@ -149,8 +185,41 @@ class TrabajoEmpleados(Ventana):
             for cell in cells:
                 column.set_cell_data_func(cell, cell_func)
 
+    def mostrar_calendario(self, button):
+        if button.get_active():
+            self.wids['popup_w'].show()
+        else:
+            self.wids['popup_w'].hide()
+
+    def sel_day_calendar(self, widget):
+        self.wids['popup_w'].hide()
+        self.wids['mostrar_fecha'].set_active(False)
+        self.update_fecha()
+        if self.wids['rb_vista_diaria'].get_active():
+            mode = 'diaria'
+        else:
+            mode = 'mensual'
+        self.rellenar_tabla(mode=mode)
+
+    def update_fecha(self):
+        self.fecha = self.wids['calendar'].get_date() # (año, mes, dia)
+        self.wids['mostrar_fecha'].set_label('Fecha\n%02d-%02d-%04d' %
+                (self.fecha[2], self.fecha[1], self.fecha[0]))
+
     def borrar_jornada(self, widget):
-        print 'borrar_jornada'
+        tmodel = self.wids['treeview_visual_diaria'].get_selection().get_selected()
+        if isinstance(tmodel[1], gtk.TreeIter):
+            id_empleado = int(tmodel[0].get_value(tmodel[1],
+                    len(self.wids['treeview_visual_diaria'].get_columns())))
+            fecha = "%04d-%02d-%02d" % (self.fecha[0], self.fecha[1],
+                    self.fecha[2])
+
+            self.objeto = self.clase.select(pclases.AND(
+                    pclases.Trabajo.q.empleadoID == id_empleado,
+                    pclases.Trabajo.q.fecha == fecha))[0]
+            self.objeto.destroySelf()
+            self.objeto = None
+            self.rellenar_tabla_diaria(self.wids['rb_vista_diaria'])
 
     def modificar_jornada(self, widget):
         print 'modificar_jornada'
@@ -158,11 +227,61 @@ class TrabajoEmpleados(Ventana):
     def dar_anticipo(self, widget):
         print 'dar_anticipo'
 
+    def comprobar_numero_valido(self, widget):
+        h_campo = self.wids['entry_h_campo'].get_text()
+        h_mani = self.wids['entry_h_manipulacion'].get_text()
+        try:
+            float(h_campo.replace(",", "."))
+            float(h_mani.replace(",", "."))
+            self.wids['b_save'].set_sensitive(True)
+        except ValueError:
+            self.wids['b_save'].set_sensitive(False)
+
     def guardar_jornada(self, widget):
-        print 'guardar_jornada'
+        empleados = []
+        h_campo = float(self.wids['entry_h_campo'].get_text())
+        h_mani = float(self.wids['entry_h_manipulacion'].get_text())
+        j_completa = self.wids['rb_j_completa'].get_active()
+        fecha = "%04d-%02d-%02d" % (self.fecha[0], self.fecha[1],
+                self.fecha[2])
+        model = self.wids['treeview_apuntar'].get_model()
+        for fila in range(len(model)):
+            if not model[fila][0]:
+                continue
+            empleados.append(pclases.Empleado.get(model[fila][-1]))
+
+        objeto_anterior = self.objeto
+        if objeto_anterior:
+            objeto_anterior.notificador.desactivar()
+
+        ids = self.clase.select(orderBy='-id')
+        try:
+            id_t= ids[0].id + 1
+        except:
+            id_t= 1
+        for empleado in empleados:
+            self.objeto = self.clase(id=id_t, empleadoID=empleado.id,
+                    fecha=fecha, jornada=j_completa, horasCampo=h_campo,
+                    horasManipulacion=h_mani)
+            print h_campo, h_mani, j_completa
+            id_t += 1
+        self.objeto.notificador.activar(self.aviso_actualizacion)
+        self.rellenar_tabla_diaria(self.wids['rb_vista_diaria'])
+
+    def filtrar_empleados(self, widget):
+        self.rellenar_empleados(widget.get_active_text())
+
+    def sel_empleado(self, widget):
+        tmodel = widget.get_selection().get_selected()
+        if isinstance(tmodel[1], gtk.TreeIter):
+            id_empleado = int(tmodel[0].get_value(tmodel[1],
+                    len(widget.get_columns())))
+            empleado = pclases.Empleado.get(id_empleado)
+            self.wids['photo'].set_from_pixbuf(
+                    empleado.get_gtkimage(maximo=100).get_pixbuf())
 
     def quitar_seleccion(self, widget):
-        print 'quitar_seleccion'
+        self.rellenar_empleados("no filtrar")
 
     def imprimir(self, widget):
         print 'imprimir'
