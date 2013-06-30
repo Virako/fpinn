@@ -295,10 +295,6 @@ class TrabajoEmpleados(Ventana):
                 for x in xrange(0, 31):
                     c = tmodel[0].get_value(tmodel[1], 8 + x * 3)
                     m = tmodel[0].get_value(tmodel[1], 9 + x * 3)
-                    print x
-                    print "C: ", h_campo, "M: ", h_manipulacion
-                    print c
-                    print m
                     if utils.is_float(c):
                         h_campo += float(c)
                     if utils.is_float(m):
