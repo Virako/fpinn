@@ -3892,6 +3892,13 @@ def media(valores):
         mean = 0.0
     return mean
 
+def is_float(f):
+    try:
+        float(f)
+        return True
+    except ValueError:
+        return False
+
 if __name__=="__main__":
     import os
     print dialogo_radio(titulo='Seleccione una opción', 

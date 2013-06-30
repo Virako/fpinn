@@ -35,6 +35,7 @@ import gtk.glade
 from framework import pclases
 from formularios.ventana import Ventana
 from formularios import utils
+from Xlib import display
 
 
 class TrabajoEmpleados(Ventana):
@@ -84,6 +85,7 @@ class TrabajoEmpleados(Ventana):
         self.wids['combo_grupo'].set_active(0)
         self.wids['entry_h_campo'].set_text("0")
         self.wids['entry_h_manipulacion'].set_text("0")
+        self.wids['popup_w'].set_transient_for(self.wids['ventana'])
         gtk.main()
 
     def get_cols_diaria(self):
@@ -186,6 +188,8 @@ class TrabajoEmpleados(Ventana):
                 column.set_cell_data_func(cell, cell_func)
 
     def mostrar_calendario(self, button):
+        coords = display.Display().screen().root.query_pointer()._data
+        self.wids['popup_w'].move(coords['root_x'] - 80, coords['root_y'] + 40)
         if button.get_active():
             self.wids['popup_w'].show()
         else:
@@ -207,13 +211,13 @@ class TrabajoEmpleados(Ventana):
                 (self.fecha[2], self.fecha[1], self.fecha[0]))
 
     def borrar_jornada(self, widget):
-        tmodel = self.wids['treeview_visual_diaria'].get_selection().get_selected()
+        model = self.wids['treeview_visual_diaria']
+        tmodel = model.get_selection().get_selected()
         if isinstance(tmodel[1], gtk.TreeIter):
             id_empleado = int(tmodel[0].get_value(tmodel[1],
                     len(self.wids['treeview_visual_diaria'].get_columns())))
             fecha = "%04d-%02d-%02d" % (self.fecha[0], self.fecha[1],
                     self.fecha[2])
-
             self.objeto = self.clase.select(pclases.AND(
                     pclases.Trabajo.q.empleadoID == id_empleado,
                     pclases.Trabajo.q.fecha == fecha))[0]
@@ -256,9 +260,9 @@ class TrabajoEmpleados(Ventana):
 
         ids = self.clase.select(orderBy='-id')
         try:
-            id_t= ids[0].id + 1
+            id_t = ids[0].id + 1
         except:
-            id_t= 1
+            id_t = 1
         for empleado in empleados:
             self.objeto = self.clase(id=id_t, empleadoID=empleado.id,
                     fecha=fecha, jornada=j_completa, horasCampo=h_campo,
@@ -277,8 +281,33 @@ class TrabajoEmpleados(Ventana):
             id_empleado = int(tmodel[0].get_value(tmodel[1],
                     len(widget.get_columns())))
             empleado = pclases.Empleado.get(id_empleado)
-            self.wids['photo'].set_from_pixbuf(
-                    empleado.get_gtkimage(maximo=100).get_pixbuf())
+            self.wids['photo'].set_image(empleado.get_gtkimage(maximo=90))
+            # Cambiar nombre, horas de campo totales, y horas de man totales
+            self.wids['nombre_empleado'].set_text(empleado.nombre)
+            if self.wids['rb_vista_diaria'].get_active():
+                self.wids['horas_campo'].set_text('')
+                self.wids['horas_manipulacion'].set_text('')
+            elif (self.wids['rb_vista_mensual'].get_active() and
+                    len(widget.get_columns()) > 30):
+                h_campo = 0
+                h_manipulacion = 0
+                x = 0
+                for x in xrange(0, 31):
+                    c = tmodel[0].get_value(tmodel[1], 8 + x * 3)
+                    m = tmodel[0].get_value(tmodel[1], 9 + x * 3)
+                    print x
+                    print "C: ", h_campo, "M: ", h_manipulacion
+                    print c
+                    print m
+                    if utils.is_float(c):
+                        h_campo += float(c)
+                    if utils.is_float(m):
+                        h_manipulacion += float(m)
+                    x += 1
+                self.wids['horas_campo'].set_text(
+                        "Horas de campo totales: %.2f h" % h_campo)
+                self.wids['horas_manipulacion'].set_text(
+                        "Horas de manipulacion totales: %.2f h" % h_manipulacion)
 
     def quitar_seleccion(self, widget):
         self.rellenar_empleados("no filtrar")
