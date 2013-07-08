@@ -51,10 +51,12 @@ CREATE TABLE empleado(
     correo_electronico TEXT DEFAULT '', 
     ccc TEXT DEFAULT '', 
     fecha_alta DATE DEFAULT CURRENT_DATE, 
-    observaciones TEXT DEFAULT '', 
+    categoria TEXT DEFAULT '', 
     precio_diario FLOAT DEFAULT 0.0, 
     precio_hora_campo FLOAT DEFAULT 0.0, 
-    precio_hora_manipulacion FLOAT DEFAULT 0.0
+    precio_hora_manipulacion FLOAT DEFAULT 0.0,
+    cuadrilla1 TEXT DEFAULT '',
+    cuadrilla2 TEXT DEFAULT ''
 );
 
 CREATE TABLE trabajo(

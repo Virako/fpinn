@@ -130,8 +130,10 @@ class TrabajoEmpleados(Ventana):
         model.clear()
         for e in pclases.Empleado.select():
             # correo_electronico utilizado para guardar el alias
-            # observaciones para guardar las cuadrillas
-            sel = True if e.observaciones.count(cuadrilla) else False
+            if e.cuadrilla1.count(cuadrilla) or e.cuadrilla2.count(cuadrilla):
+                sel = True
+            else:
+                sel = False
             model.append((sel, e.nombre, e.correoElectronico, e.id))
 
     def rellenar_tabla(self, mode='diaria'):

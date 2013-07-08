@@ -217,8 +217,8 @@ class Empleados(Ventana, VentanaGenerica):
         if self.objeto == None:
             s = False
         #ws = tuple(["XXXWidgets_que_no_tengan_«adaptador»_en_el_diccionario_del_constructor", "XXXtv_treeview", "b_borrar"] + [self.dic_campos[k] for k in self.dic_campos.keys()])
-        ws = tuple(["b_borrar"] + 
-                   [self.adaptador.get_adaptadores()[col]['widget'].name 
+        ws = tuple(["b_borrar"] +
+                [self.adaptador.get_adaptadores()[col]['widget'].name
                     for col in self.adaptador.get_adaptadores().keys()])
             # b_nuevo y b_buscar no se activan/desactivan aquí, sino en el
             # chequeo de permisos.
