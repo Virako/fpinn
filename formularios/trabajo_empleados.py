@@ -228,7 +228,28 @@ class TrabajoEmpleados(Ventana):
             self.rellenar_tabla_diaria(self.wids['rb_vista_diaria'])
 
     def modificar_jornada(self, widget):
-        print 'modificar_jornada'
+        model = self.wids['treeview_visual_diaria']
+        tmodel = model.get_selection().get_selected()
+        if isinstance(tmodel[1], gtk.TreeIter):
+            id_empleado = int(tmodel[0].get_value(tmodel[1],
+                    len(self.wids['treeview_visual_diaria'].get_columns())))
+            fecha = "%04d-%02d-%02d" % (self.fecha[0], self.fecha[1],
+                    self.fecha[2])
+            self.objeto = self.clase.select(pclases.AND(
+                    pclases.Trabajo.q.empleadoID == id_empleado,
+                    pclases.Trabajo.q.fecha == fecha))[0]
+            nueva_c = utils.dialogo_entrada(titulo = "HORAS CAMPO",
+                    texto = "Introduzca nuevas horas de campo",
+                    padre = self.wids['ventana'])
+            nueva_m = utils.dialogo_entrada(titulo = "HORAS MANIPULACION",
+                    texto = "Introduzca nuevas horas de manipulacion",
+                    padre = self.wids['ventana'])
+            if utils.is_float(nueva_c):
+                self.objeto.horasCampo = float(nueva_c)
+            if utils.is_float(nueva_m):
+                self.objeto.horasManipulacion = float(nueva_m)
+        self.objeto.notificador.activar(self.aviso_actualizacion)
+        self.rellenar_tabla_diaria(self.wids['rb_vista_diaria'])
 
     def dar_anticipo(self, widget):
         print 'dar_anticipo'
@@ -242,6 +263,16 @@ class TrabajoEmpleados(Ventana):
             self.wids['b_save'].set_sensitive(True)
         except ValueError:
             self.wids['b_save'].set_sensitive(False)
+
+    def existe_empleado_fecha(self, id_empleado, fecha):
+        """ Buscar si un empleado tiene un trabajo hecho en una fecha """
+        try:
+            self.clase.select(pclases.AND(
+                    pclases.Trabajo.q.empleadoID == id_empleado,
+                    pclases.Trabajo.q.fecha == fecha))[0]
+            return True
+        except:
+            return False
 
     def guardar_jornada(self, widget):
         empleados = []
@@ -266,10 +297,11 @@ class TrabajoEmpleados(Ventana):
         except:
             id_t = 1
         for empleado in empleados:
+            if self.existe_empleado_fecha(empleado.id, fecha):
+                continue
             self.objeto = self.clase(id=id_t, empleadoID=empleado.id,
                     fecha=fecha, jornada=j_completa, horasCampo=h_campo,
                     horasManipulacion=h_mani)
-            print h_campo, h_mani, j_completa
             id_t += 1
         self.objeto.notificador.activar(self.aviso_actualizacion)
         self.rellenar_tabla_diaria(self.wids['rb_vista_diaria'])
