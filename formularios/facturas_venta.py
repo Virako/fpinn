@@ -31,6 +31,7 @@
 ###################################################################
 
 import os
+import sys
 from formularios.ventana import Ventana
 from formularios import utils
 import pygtk
