@@ -72,6 +72,8 @@ class Empleados(Ventana, VentanaGenerica):
                        'b_documentos/clicked': self.add_documento, 
                        'b_prev/clicked': self.prev, 
                        'b_next/clicked': self.next, 
+                       'b_get_baja/clicked': self.get_baja, 
+                       'b_quit_baja/clicked': self.quit_baja, 
                        'b_precio_a_todos/clicked': self.aplicar_precio_a_todos
                       }
         self.add_connections(connections)
@@ -478,6 +480,12 @@ class Empleados(Ventana, VentanaGenerica):
             return
         self.objeto = None
         self.ir_a_primero()
+
+    def get_baja(self, widget):
+        self.wids['observaciones'].set_text('de baja')
+
+    def quit_baja(self, widget):
+        self.wids['observaciones'].set_text('')
 
     def aplicar_precio_a_todos(self, boton):
         """

@@ -129,16 +129,16 @@ class TrabajoEmpleados(Ventana):
         model = self.wids['treeview_apuntar'].get_model()
         model.clear()
         for e in pclases.Empleado.select():
-            # correo_electronico utilizado para guardar el alias
-            if e.cuadrilla1.count(cuadrilla) or e.cuadrilla2.count(cuadrilla):
-                sel = True
-            else:
-                sel = False
+            # TODO buscar cuadrillas en BD
+            #if e.cuadrilla1.count(cuadrilla) or e.cuadrilla2.count(cuadrilla):
+            #    sel = True
+            #else:
+            #    sel = False
+            sel = False
             model.append((sel, e.nombre, e.correoElectronico, e.id))
 
     def rellenar_tabla(self, mode='diaria'):
         """ Rellena el model con los items de la consulta. """
-
         if mode == 'diaria':
             model = self.wids['treeview_visual_diaria'].get_model()
             model.clear()
@@ -152,15 +152,22 @@ class TrabajoEmpleados(Ventana):
         elif mode == 'mensual':
             model = self.wids['treeview_visual_mensual'].get_model()
             model.clear()
-
             f_ini = "%04d-%02d-01" % (self.fecha[0], self.fecha[1])
             if self.fecha[1] == 12:
                 f_fin = "%04d-01-01" % (self.fecha[0] + 1)
             else:
                 f_fin = "%04d-%02d-01" % (self.fecha[0], self.fecha[1] + 1)
             for e in pclases.Empleado.select():
-                fila = [e.nombre, e.correoElectronico, '0', '0', '0', '0',
-                        '0'] + [False, '-', '-'] * 31 + [e.id]
+                ss = 0
+                nomina = 0
+                sobre = 0
+                anticipo = 0
+                for anti in e.get_anticipos_mes(f1=f_ini, f2=f_fin):
+                    anticipo += anti.cantidad
+                total = ss + nomina - sobre - anticipo
+                fila = [e.nombre, e.correoElectronico, str(ss), str(nomina),
+                        str(sobre), str(anticipo), str(total)] + [False, '-',
+                        '-'] * 31 + [e.id]
                 for trabajo in e.get_trabajo_mes(f1=f_ini, f2=f_fin):
                     dia = int(trabajo.fecha.__str__()[-2:])
                     pos = 7 + (dia - 1) * 3
@@ -170,8 +177,7 @@ class TrabajoEmpleados(Ventana):
                 model.append(fila)
             self.colorear(self.wids['treeview_visual_mensual'])
         else:
-            print 'Error inesperado'
-            exit()
+            assert('error inesperado')
 
     def colorear(self, cols):
 
@@ -208,7 +214,8 @@ class TrabajoEmpleados(Ventana):
         self.rellenar_tabla(mode=mode)
 
     def update_fecha(self):
-        self.fecha = self.wids['calendar'].get_date() # (año, mes, dia)
+        self.fecha = list(self.wids['calendar'].get_date())# (año, mes, dia)
+        self.fecha[1] = self.fecha[1] + 1
         self.wids['mostrar_fecha'].set_label('Fecha\n%02d-%02d-%04d' %
                 (self.fecha[2], self.fecha[1], self.fecha[0]))
 
@@ -238,12 +245,12 @@ class TrabajoEmpleados(Ventana):
             self.objeto = self.clase.select(pclases.AND(
                     pclases.Trabajo.q.empleadoID == id_empleado,
                     pclases.Trabajo.q.fecha == fecha))[0]
-            nueva_c = utils.dialogo_entrada(titulo = "HORAS CAMPO",
-                    texto = "Introduzca nuevas horas de campo",
-                    padre = self.wids['ventana'])
-            nueva_m = utils.dialogo_entrada(titulo = "HORAS MANIPULACION",
-                    texto = "Introduzca nuevas horas de manipulacion",
-                    padre = self.wids['ventana'])
+            nueva_c = utils.dialogo_entrada(titulo="HORAS CAMPO",
+                    texto="Introduzca nuevas horas de campo",
+                    padre=self.wids['ventana'])
+            nueva_m = utils.dialogo_entrada(titulo="HORAS MANIPULACION",
+                    texto="Introduzca nuevas horas de manipulacion",
+                    padre=self.wids['ventana'])
             if utils.is_float(nueva_c):
                 self.objeto.horasCampo = float(nueva_c)
             if utils.is_float(nueva_m):
@@ -252,7 +259,25 @@ class TrabajoEmpleados(Ventana):
         self.rellenar_tabla_diaria(self.wids['rb_vista_diaria'])
 
     def dar_anticipo(self, widget):
-        print 'dar_anticipo'
+        anticipo = utils.dialogo_entrada(titulo="ANTICIPO",
+                texto="Introduzca el anticipo a dar",
+                padre=self.wids['ventana'])
+        if utils.is_float(anticipo):
+            if self.wids['rb_vista_diaria'].get_active():
+                widget_t = self.wids['treeview_visual_diaria']
+            elif self.wids['rb_vista_mensual'].get_active():
+                widget_t = self.wids['treeview_visual_mensual']
+            else:
+                assert('error inesperado')
+            model = widget_t.get_selection().get_selected()
+            if isinstance(model[1], gtk.TreeIter):
+                id_empleado = int(model[0].get_value(model[1],
+                        len(widget_t.get_columns())))
+            fecha = "%04d-%02d-%02d" % (self.fecha[0], self.fecha[1],
+                    self.fecha[2])
+            pclases.Anticipo(empleadoID=id_empleado, cantidad=float(anticipo),
+                    fecha=fecha)
+        self.rellenar_tabla_mensual(self.wids['rb_vista_mensual'])
 
     def comprobar_numero_valido(self, widget):
         h_campo = self.wids['entry_h_campo'].get_text()
@@ -337,7 +362,8 @@ class TrabajoEmpleados(Ventana):
                 self.wids['horas_campo'].set_text(
                         "Horas de campo totales: %.2f h" % h_campo)
                 self.wids['horas_manipulacion'].set_text(
-                        "Horas de manipulacion totales: %.2f h" % h_manipulacion)
+                        "Horas de manipulacion totales: %.2f h" %
+                        h_manipulacion)
 
     def quitar_seleccion(self, widget):
         self.rellenar_empleados("no filtrar")

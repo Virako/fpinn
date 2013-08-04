@@ -51,12 +51,10 @@ CREATE TABLE empleado(
     correo_electronico TEXT DEFAULT '', 
     ccc TEXT DEFAULT '', 
     fecha_alta DATE DEFAULT CURRENT_DATE, 
-    categoria TEXT DEFAULT '', 
+    observaciones TEXT DEFAULT '', 
     precio_diario FLOAT DEFAULT 0.0, 
     precio_hora_campo FLOAT DEFAULT 0.0, 
-    precio_hora_manipulacion FLOAT DEFAULT 0.0,
-    cuadrilla1 TEXT DEFAULT '',
-    cuadrilla2 TEXT DEFAULT ''
+    precio_hora_manipulacion FLOAT DEFAULT 0.0
 );
 
 CREATE TABLE trabajo(
@@ -66,6 +64,25 @@ CREATE TABLE trabajo(
     jornada BOOLEAN DEFAULT FALSE,
     horas_campo FLOAT DEFAULT 0.0,
     horas_manipulacion FLOAT DEFAULT 0.0
+);
+
+CREATE TABLE cuadrilla(
+    id SERIAL PRIMARY KEY,
+    nombre TEXT
+);
+
+CREATE TABLE cuadrilla_empleado(
+    id SERIAL PRIMARY KEY,
+    cuadrilla_id INT REFERENCES cuadrilla,
+    empleado_id INT REFERENCES empleado,
+    encargado BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE anticipo(
+    id SERIAL PRIMARY KEY,
+    empleado_id INT REFERENCES empleado,
+    cantidad FLOAT DEFAULT 0.0,
+    fecha DATE DEFAULT CURRENT_DATE
 );
 
 -------------
