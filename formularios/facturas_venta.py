@@ -213,6 +213,7 @@ class FacturasVenta(Ventana, VentanaGenerica):
         #     con la seride del 2010 estando en el 2011.
         # TODO: PORASQUI: Mirar por qué ha pasado eso.
         self.wids['e_numfactura'].set_property("editable", True)
+        self.wids['e_fecha'].set_property("editable", True)
 
     def editar_cantidad(self, cell, path, text):
         if self.objeto.bloqueada:
