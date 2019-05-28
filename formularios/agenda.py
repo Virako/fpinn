@@ -4,7 +4,7 @@
 ###############################################################################
 # Copyright (C) 2005-2007  Francisco José Rodríguez Bogado,                   #
 #                          (pacoqueen@users.sourceforge.net                   #
-# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9@gmail.com          #
+# Copyright (C) 2013  Victor Ramirez de la Corte, virako.9 at gmail.com       #
 #                                                                             #
 # This file is part of F.P.-INN .                                             #
 #                                                                             #
